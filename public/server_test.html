@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Test</title>
+</head>
+<body>
+    <h1>✅ Web Server is Working!</h1>
+    <p>If you can see this page, the web server is running correctly.</p>
+    <p>Current time: <?php echo date('Y-m-d H:i:s'); ?></p>
+    <p>Document Root: <?php echo __DIR__; ?></p>
+    
+    <hr>
+    
+    <h2>Test Links:</h2>
+    <ul>
+        <li><a href="/debug.php">Test Laravel Debug Script</a></li>
+        <li><a href="/test">Test Laravel Route</a></li>
+        <li><a href="/login">Login Page</a></li>
+        <li><a href="/">Homepage</a></li>
+    </ul>
+</body>
+</html>

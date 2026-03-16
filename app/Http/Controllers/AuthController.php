@@ -1,0 +1,139 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+
+class AuthController extends Controller
+{
+    public function showLogin()
+    {
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        Log::info('Login attempt started', ['email' => $credentials['email']]);
+
+        // First, check if user exists in database
+        $user = User::where('email', $credentials['email'])->first();
+        
+        if (!$user) {
+            Log::warning('Login failed: User not found', ['email' => $credentials['email']]);
+            return back()->withErrors([
+                'email' => 'No account found with this email address. Please check your email or contact your administrator.',
+            ])->withInput($request->only('email'));
+        }
+
+        Log::info('User found', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'role' => $user->role,
+            'is_admin' => $user->isAdmin(),
+            'is_super_admin' => $user->isSuperAdmin(),
+            'access_enabled' => $user->isAccessEnabled()
+        ]);
+
+        // Check access enabled and verify password
+        if (!$user->isAccessEnabled()) {
+            Log::warning('Login failed: Access disabled', ['email' => $credentials['email']]);
+            return back()->withErrors([
+                'email' => 'Your account access has been disabled. Please contact your administrator.',
+            ])->withInput($request->only('email'));
+        }
+
+        if (!Hash::check($credentials['password'], $user->password)) {
+            Log::warning('Login failed: Invalid password', ['email' => $credentials['email']]);
+            return back()->withErrors([
+                'password' => 'The password you entered is incorrect. Please try again.',
+            ])->withInput($request->only('email'));
+        }
+
+        // Attempt to authenticate
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            $authenticatedUser = Auth::user();
+
+            Log::info('Login successful', [
+                'user_id' => $authenticatedUser->id,
+                'email' => $authenticatedUser->email,
+                'role' => $authenticatedUser->role,
+                'is_super_admin' => $authenticatedUser->isSuperAdmin(),
+                'is_admin' => $authenticatedUser->isAdmin(),
+                'is_cashier' => $authenticatedUser->isCashier(),
+                'is_manager' => $authenticatedUser->isManager(),
+                'is_employee' => $authenticatedUser->isEmployee(),
+                'access_enabled' => $authenticatedUser->isAccessEnabled(),
+            ]);
+
+            // Determine redirect based on role
+            if ($authenticatedUser->isSuperAdmin()) {
+                Log::info('Redirecting to super admin dashboard');
+                return redirect()->route('dashboard.superadmin')
+                    ->with('success', 'Welcome back, Super Admin!');
+            }
+
+            if ($authenticatedUser->isAdmin()) {
+                Log::info('Redirecting to admin dashboard');
+                return redirect()->route('dashboard.admin')
+                    ->with('success', 'Welcome back, Admin!');
+            }
+
+            // Cashier - redirect to cashier dashboard (can process sales)
+            if ($authenticatedUser->isCashier()) {
+                Log::info('Redirecting to cashier dashboard');
+                return redirect()->route('dashboard.cashier')
+                    ->with('success', 'Welcome back, Cashier!');
+            }
+
+            // Manager - redirect to manager dashboard
+            if ($authenticatedUser->isManager()) {
+                Log::info('Redirecting to manager dashboard');
+                return redirect()->route('dashboard.manager')
+                    ->with('success', 'Welcome back, Manager!');
+            }
+
+            // Employee - redirect to employee dashboard
+            if ($authenticatedUser->isEmployee()) {
+                Log::info('Redirecting to employee dashboard');
+                return redirect()->route('dashboard.employee')
+                    ->with('success', 'Welcome back, Employee!');
+            }
+
+            // Fallback - redirect to user dashboard
+            Log::info('Redirecting to user dashboard');
+            return redirect()->route('dashboard.user')
+                ->with('success', 'Welcome back!');
+        }
+
+        Log::warning('Login failed: Authentication attempt failed', ['email' => $credentials['email']]);
+
+        return back()->withErrors([
+            'email' => 'Unable to log in with these credentials. Please check your email and password and try again.',
+        ])->withInput($request->only('email'));
+    }
+
+    public function logout(Request $request)
+    {
+        $user = Auth::user();
+        Log::info('User logged out', ['user_id' => $user?->id, 'email' => $user?->email]);
+
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('message', 'You have been logged out successfully.');
+    }
+}
+

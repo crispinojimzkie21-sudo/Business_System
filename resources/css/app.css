@@ -1,0 +1,27 @@
+/* Simple app styles for welcome page */
+:root{
+    --bs-bg-1: linear-gradient(135deg,#f5f7fa 0%,#c3dbff 100%);
+    --bs-card-bg: #ffffffcc;
+    --bs-accent: #1b1b18;
+    --bs-muted: #6b6b6b;
+    --bs-radius: 10px;
+    --bs-font: Arial,Helvetica,sans-serif;
+}
+
+html,body{height:100%;margin:0;font-family:var(--bs-font);}
+body.bs-welcome-bg{background:var(--bs-bg-1);background-attachment:fixed;}
+.bs-header{padding:18px 0}
+.bs-container{max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+.bs-logo{font-size:20px;color:var(--bs-accent);margin:0}
+.bs-nav a{margin-left:12px;text-decoration:none}
+.bs-btn{display:inline-block;padding:8px 14px;background:var(--bs-accent);color:#fff;border-radius:6px;text-decoration:none}
+.bs-btn-outline{background:transparent;border:1px solid rgba(0,0,0,0.08);color:var(--bs-accent)}
+
+.bs-hero{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 80px);padding:20px}
+.bs-card{max-width:760px;background:var(--bs-card-bg);backdrop-filter:blur(6px);padding:36px;border-radius:var(--bs-radius);box-shadow:0 10px 30px rgba(16,24,40,0.08);text-align:center}
+.bs-card h2{margin:0 0 8px 0;color:var(--bs-accent)}
+.muted{color:var(--bs-muted);margin-bottom:18px}
+.actions a{margin:0 8px}
+
+@media (max-width:640px){.bs-card{padding:22px}}
+
