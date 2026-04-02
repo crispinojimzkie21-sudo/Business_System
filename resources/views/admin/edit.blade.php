@@ -47,7 +47,10 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-blue-300 mb-2">Email</label>
-                        <input name="email" type="email" value="{{ old('email', $user->email) }}" class="w-full px-4 py-2 border border-gray-700 bg-black/40 rounded-md text-white placeholder-gray-400" required />
+                        <div class="w-full px-4 py-2 border border-gray-700 bg-gray-800/50 rounded-md text-gray-300">
+                            {{ $user->email }}
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Email cannot be edited</p>
                     </div>
                     
                     <div>
@@ -98,7 +101,7 @@
                 <div>
                     <label class="block text-sm font-medium text-blue-300 mb-2">Role</label>
                     <select name="role" class="w-full px-4 py-2 border border-gray-700 bg-black/40 rounded-md text-white">
-                        <option value="user" {{ $user->role == 'user' ? 'selected' : '' }}>Employee</option>
+                        <option value="employee" {{ $user->role == 'employee' || $user->role == 'user' ? 'selected' : '' }}>Employee</option>
                         <option value="admin" {{ $user->role == 'admin' ? 'selected' : '' }}>Admin Assistant</option>
                     </select>
                 </div>

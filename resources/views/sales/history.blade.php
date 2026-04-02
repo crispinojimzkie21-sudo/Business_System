@@ -103,7 +103,135 @@
         <div class="mt-4">
             {{ $sales->links() }}
         </div>
+
+        <!-- Real-time Status Indicator -->
+        <div class="fixed bottom-4 right-4 bg-green-600/20 border border-green-600/50 rounded-lg px-3 py-2 flex items-center space-x-2">
+            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span class="text-green-400 text-xs">Live Updates</span>
+        </div>
     </div>
+
+    <script>
+        // Real-time sales history updates
+        let lastSaleId = @php echo $sales->first()->id ?? 0; @endphp;
+        let isUpdating = false;
+
+        function checkForNewSales() {
+            if (isUpdating) return;
+            
+            isUpdating = true;
+            
+            fetch('/api/cashier/sales/latest?last_id=' + lastSaleId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.new_sales && data.new_sales.length > 0) {
+                        // Update the table with new sales
+                        updateSalesTable(data.new_sales);
+                        lastSaleId = data.new_sales[0].id;
+                        
+                        // Show notification
+                        showNotification('New sale recorded!', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking for new sales:', error);
+                })
+                .finally(() => {
+                    isUpdating = false;
+                });
+        }
+
+        function updateSalesTable(newSales) {
+            const tbody = document.querySelector('tbody');
+            const noSalesRow = tbody.querySelector('td[colspan="7"]');
+            
+            // Remove "No sales found" row if it exists
+            if (noSalesRow) {
+                noSalesRow.parentElement.remove();
+            }
+            
+            // Add new sales to the top of the table
+            newSales.forEach(sale => {
+                const row = createSaleRow(sale);
+                tbody.insertBefore(row, tbody.firstChild);
+            });
+            
+            // Limit table to show only latest 50 rows for performance
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length > 50) {
+                for (let i = 50; i < rows.length; i++) {
+                    rows[i].remove();
+                }
+            }
+        }
+
+        function createSaleRow(sale) {
+            const row = document.createElement('tr');
+            row.className = 'border-b border-blue-900/20 hover:bg-blue-900/10 bg-green-900/20';
+            row.innerHTML = `
+                <td class="py-3 px-4 font-mono text-green-400">${sale.transaction_id || 'N/A'}</td>
+                <td class="py-3 px-4">${new Date(sale.created_at).toLocaleString()}</td>
+                <td class="py-3 px-4">${sale.customer_name || 'N/A'}</td>
+                <td class="py-3 px-4">${sale.payment_method ? sale.payment_method.charAt(0).toUpperCase() + sale.payment_method.slice(1) : 'N/A'}</td>
+                <td class="py-3 px-4">₱${parseFloat(sale.total_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="py-3 px-4">${sale.user_name || 'Unknown'}</td>
+                <td class="py-3 px-4">
+                    <a href="/cashier/sales/${sale.id}/receipt" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded inline-block">
+                        View
+                    </a>
+                </td>
+            `;
+            
+            // Highlight effect for new rows
+            row.style.animation = 'slideIn 0.5s ease-out';
+            
+            return row;
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-2 ${
+                type === 'success' ? 'bg-green-600/90 text-white' : 'bg-blue-600/90 text-white'
+            }`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Start checking for new sales every 10 seconds
+        setInterval(checkForNewSales, 10000);
+        
+        // Initial check after page load
+        setTimeout(checkForNewSales, 2000);
+
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-20px);
+                    background-color: rgba(34, 197, 94, 0.3);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                    background-color: rgba(34, 197, 94, 0.1);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
 

@@ -256,4 +256,45 @@ public function reports()
             return back()->with('error', 'Failed to delete sale: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get latest sales for real-time updates
+     */
+    public function getLatestSales(Request $request)
+    {
+        try {
+            $lastId = $request->get('last_id', 0);
+            
+            // Get sales newer than the last ID
+            $newSales = Sale::with('user')
+                ->where('id', '>', $lastId)
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($sale) {
+                    return [
+                        'id' => $sale->id,
+                        'transaction_id' => $sale->transaction_id,
+                        'customer_name' => $sale->customer_name,
+                        'payment_method' => $sale->payment_method,
+                        'total_amount' => $sale->total_amount,
+                        'user_name' => $sale->user ? $sale->user->name : 'Unknown',
+                        'created_at' => $sale->created_at->toISOString(),
+                    ];
+                });
+            
+            return response()->json([
+                'success' => true,
+                'new_sales' => $newSales,
+                'count' => $newSales->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching latest sales: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching latest sales'
+            ], 500);
+        }
+    }
 }

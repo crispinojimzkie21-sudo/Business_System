@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>Manager Dashboard - {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -170,7 +171,12 @@
                     <p class="text-xs md:text-sm text-purple-200">Days This Month</p>
                 </div>
                 <div class="bg-black/40 p-3 rounded-lg border border-purple-900/20 text-center">
-                    <p class="text-2xl md:text-3xl font-bold text-purple-400">{{ $totalHoursWorked }}</p>
+                    @php
+    $hours = floor($totalHoursWorked);
+    $minutes = round(($totalHoursWorked - $hours) * 60);
+    if ($minutes == 60) { $hours += 1; $minutes = 0; }
+@endphp
+<p class="text-2xl md:text-3xl font-bold text-purple-400">{{ $hours }}h {{ $minutes }}m</p>
                     <p class="text-xs md:text-sm text-purple-200">Hours Worked</p>
                 </div>
                 <div class="bg-black/40 p-3 rounded-lg border border-purple-900/20 text-center">

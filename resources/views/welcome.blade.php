@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>{{ config('app.name', 'Business System') }}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <title>RM Manliquid</title>
 
     <!-- Tailwind CDN for quick styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,6 +26,17 @@
 <body class="bg-gradient-to-br from-black via-gray-900 to-red-900 min-h-screen text-white">
     <header class="py-6">
             <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
+
+            <!-- Logo Section -->
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 bg-red-500/20 backdrop-blur-lg rounded-2xl flex items-center justify-center">
+                    <span class="text-2xl font-bold text-red-400">RM</span>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-white">RM Manliquid</h1>
+                    <p class="text-lg text-red-300">Business System</p>
+                </div>
+            </div>
 
             <nav class="flex items-center gap-3">
                 @if (Route::has('login'))
@@ -104,7 +116,7 @@
         </section>
     </main>
 
-    <footer class="mt-12 py-8 text-center text-sm text-slate-500">&copy; {{ date('Y') }} {{ config( 'Business System') }} Manliquid Store</footer>
+    <footer class="mt-12 py-8 text-center text-sm text-slate-500">&copy; {{ date('Y') }} RM Manliquid Business System</footer>
     
     <script>
         // Set the correct form action URLs

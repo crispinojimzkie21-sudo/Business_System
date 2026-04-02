@@ -8,6 +8,8 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
     <title>Employee Dashboard - {{ config('app.name') }}</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -310,7 +312,12 @@
 
             <div class="bg-black/60 p-3 md:p-4 rounded-lg border border-blue-900/30 text-center">
 
-                <p class="text-2xl md:text-3xl font-bold text-blue-400">{{ $totalHoursWorked }}</p>
+                @php
+    $hours = floor($totalHoursWorked);
+    $minutes = round(($totalHoursWorked - $hours) * 60);
+    if ($minutes == 60) { $hours += 1; $minutes = 0; }
+@endphp
+<p class="text-2xl md:text-3xl font-bold text-blue-400">{{ $hours }}h {{ $minutes }}m</p>
 
                 <p class="text-xs md:text-sm text-blue-200">Hours Worked</p>
 

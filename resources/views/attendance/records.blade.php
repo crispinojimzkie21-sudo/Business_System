@@ -58,36 +58,24 @@
         @endif
 
         @if(Auth::user()->isSuperAdmin() || Auth::user()->isAdmin())
-            <!-- Bulk Actions -->
-            <div class="mb-6 flex items-center gap-4 p-4 bg-blue-900/30 border border-blue-700/50 rounded-lg">
-                <button type="button" id="bulkDeleteBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium hidden" disabled>🗑️ Delete Selected (<span id="selectedCount">0</span>)</button>
-            </div>
-            <form id="bulkDeleteForm" method="POST" action="{{ route('attendance.bulk-delete') }}">
-                @csrf
-                <!-- Attendance Records List -->
-                <div class="bg-black/60 rounded-lg border border-blue-900/30 overflow-hidden">
-                    <div class="p-6">
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b border-blue-900/30">
-                                        <th class="text-left py-3 px-4 text-blue-300">
-                                            <input type="checkbox" id="selectAllCheckbox" class="w-4 h-4 rounded bg-gray-700 border-gray-600">
-                                        </th>
-                                        <th class="text-left py-3 px-4 text-blue-300">Employee</th>
-                                        <th class="text-left py-3 px-4 text-blue-300">Date</th>
-                                        <th class="text-left py-3 px-4 text-blue-300">Check In</th>
-                                        <th class="text-left py-3 px-4 text-blue-300">Check Out</th>
-                                        <th class="text-left py-3 px-4 text-blue-300">Duration</th>
-                                        <th class="text-left py-3 px-4 text-blue-300">Actions</th>
-                                    </tr>
-                                </thead>
+            <!-- Attendance Records List -->
+            <div class="bg-black/60 rounded-lg border border-blue-900/30 overflow-hidden">
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-blue-900/30">
+                                    <th class="text-left py-3 px-4 text-blue-300">Employee</th>
+                                    <th class="text-left py-3 px-4 text-blue-300">Date</th>
+                                    <th class="text-left py-3 px-4 text-blue-300">Check In</th>
+                                    <th class="text-left py-3 px-4 text-blue-300">Check Out</th>
+                                    <th class="text-left py-3 px-4 text-blue-300">Duration</th>
+                                    <th class="text-left py-3 px-4 text-blue-300">Actions</th>
+                                </tr>
+                            </thead>
                                 <tbody>
                                     @forelse ($attendances as $attendance)
                                         <tr class="border-b border-blue-900/20 hover:bg-blue-900/10">
-                                            <td class="py-3 px-4">
-                                                <input type="checkbox" name="attendance_ids[]" value="{{ $attendance->id }}" class="attendance-checkbox w-4 h-4 rounded bg-gray-700 border-gray-600">
-                                            </td>
                                             <td class="py-3 px-4">{{ $attendance->user->name ?? 'Unknown' }}</td>
                                             <td class="py-3 px-4">{{ $attendance->date }}</td>
                                             <td class="py-3 px-4">{{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i:s') : 'N/A' }}</td>
@@ -121,7 +109,6 @@
                         </div>
                     </div>
                 </div>
-            </form>
         @else
             <!-- Attendance Records List (for regular users - no checkboxes) -->
             <div class="bg-black/60 rounded-lg border border-blue-900/30 overflow-hidden">
@@ -170,108 +157,5 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-            const checkboxes = document.querySelectorAll('.attendance-checkbox');
-            const selectedCount = document.getElementById('selectedCount');
-            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-            const bulkForm = document.getElementById('bulkDeleteForm');
-
-            function updateSelection() {
-                const checkedCount = document.querySelectorAll('.attendance-checkbox:checked').length;
-                if (selectedCount) {
-                    selectedCount.textContent = checkedCount;
-                }
-
-                const allChecked = checkboxes.length > 0 && checkedCount === checkboxes.length;
-                const someChecked = checkedCount > 0;
-
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = allChecked;
-                    selectAllCheckbox.indeterminate = someChecked && !allChecked;
-                }
-
-                if (bulkDeleteBtn) {
-                    bulkDeleteBtn.classList.toggle('hidden', !someChecked);
-                    bulkDeleteBtn.disabled = !someChecked;
-                }
-            }
-
-            // Select all functionality
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
-                    checkboxes.forEach(cb => {
-                        if (cb) {
-                            cb.checked = this.checked;
-                        }
-                    });
-                    updateSelection();
-                });
-            }
-
-            // Individual checkbox functionality
-            checkboxes.forEach(cb => {
-                if (cb) {
-                    cb.addEventListener('change', updateSelection);
-                }
-            });
-
-            // Bulk delete functionality
-            if (bulkDeleteBtn) {
-                bulkDeleteBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const checkedBoxes = document.querySelectorAll('.attendance-checkbox:checked');
-                    const count = checkedBoxes.length;
-                    
-                    if (count === 0) {
-                        alert('Please select at least one attendance record to delete.');
-                        return;
-                    }
-                    
-                    if (confirm(`Are you sure you want to delete ${count} selected attendance record(s)? This action cannot be undone.`)) {
-                        // Create a hidden input for each selected attendance ID
-                        const formData = new FormData(bulkForm);
-                        
-                        // Clear existing attendance_ids
-                        formData.delete('attendance_ids[]');
-                        
-                        // Add selected attendance IDs
-                        checkedBoxes.forEach(checkbox => {
-                            formData.append('attendance_ids[]', checkbox.value);
-                        });
-                        
-                        // Submit via fetch to ensure proper form submission
-                        fetch(bulkForm.action, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
-                                                document.querySelector('input[name="_token"]')?.value
-                            }
-                        })
-                        .then(response => response.json ? response.json() : response.text())
-                        .then(data => {
-                            if (typeof data === 'object' && data.redirect) {
-                                window.location.href = data.redirect;
-                            } else {
-                                // If not JSON, assume it's a redirect and reload the page
-                                window.location.reload();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            // Fallback: submit the form normally
-                            bulkForm.submit();
-                        });
-                    }
-                });
-            }
-
-            // Initialize selection state
-            updateSelection();
-        });
-    </script>
 </body>
 </html>

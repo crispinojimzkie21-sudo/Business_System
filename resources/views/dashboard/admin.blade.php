@@ -3,9 +3,26 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Dashboard - {{ config('app.name') }}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <title>Assistant Dashboard - {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mobileMenu');
+            const button = event.target.closest('button[onclick="toggleMobileMenu()"]');
+            
+            if (!menu.contains(event.target) && !button) {
+                menu.classList.add('hidden');
+            }
+        });
+        
         // Attendance Local Storage Management
         function saveAttendanceState() {
             // Save current attendance status to local storage
@@ -124,7 +141,7 @@
         <!-- Header -->
         <header class="flex items-center justify-between mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-blue-400">👨‍💼 Admin Dashboard</h1>
+                <h1 class="text-3xl font-bold text-blue-400">👨‍💼 Assistant Dashboard</h1>
                 @auth
                     <p class="text-blue-200 text-sm mt-1">Administrative Assistant Access</p>
                 @else
@@ -133,7 +150,7 @@
             </div>
             <div class="flex items-center gap-4">
 @auth
-                    <span class="text-sm text-blue-200">{{ Auth::user()->name ?? 'Admin Assistant' }} (Admin)</span>
+                    <span class="text-sm text-blue-200">{{ 'Admin Assistant' }} (Assistant)</span>
                     <a href="{{ route('dashboard.profile') }}" class="px-3 py-2 text-blue-200 hover:bg-blue-900/30 rounded text-sm">
                         <i class="fas fa-user-circle mr-1"></i>Profile
                     </a>
@@ -149,6 +166,53 @@
                     <a href="{{ url('/login') }}" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded">Login</a>
                 @endauth
             </div>
+            
+            <!-- Mobile Navigation -->
+            <div class="md:hidden">
+                <button onclick="toggleMobileMenu()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white">
+                    <i class="fas fa-bars mr-2"></i>Menu
+                </button>
+                
+                <!-- Mobile Menu Dropdown -->
+                <div id="mobileMenu" class="hidden absolute right-0 top-16 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 min-w-48">
+                    <div class="py-2">
+@auth
+                        <div class="px-4 py-2 border-b border-gray-700">
+                            <span class="text-sm text-blue-200">{{ 'Admin Assistant' }} (Assistant)</span>
+                        </div>
+                        <a href="{{ route('television-eload.dashboard') }}" class="block px-4 py-3 text-white hover:bg-gray-800 transition-colors">
+                            <i class="fas fa-tv mr-2"></i>📺 TV E-Load
+                        </a>
+                        <a href="{{ route('attendance.records') }}" class="block px-4 py-3 text-white hover:bg-gray-800 transition-colors">
+                            <i class="fas fa-users mr-2"></i>📋 Employee Attendance
+                        </a>
+                        <a href="{{ route('attendance.index') }}" class="block px-4 py-3 text-white hover:bg-gray-800 transition-colors">
+                            <i class="fas fa-calendar-day mr-2"></i>📅 Today's Attendance
+                        </a>
+                        <a href="{{ route('dashboard.profile') }}" class="block px-4 py-3 text-white hover:bg-gray-800 transition-colors">
+                            <i class="fas fa-user-circle mr-2"></i>Profile
+                        </a>
+                    @else
+                        <div class="px-4 py-2 border-b border-gray-700">
+                            <span class="text-sm text-yellow-300">Preview Mode</span>
+                        </div>
+                        <a href="{{ url('/login') }}" class="block px-4 py-3 text-white hover:bg-gray-800 transition-colors">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                    @endauth
+                    @auth
+                        <div class="px-4 py-2 border-t border-gray-700">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full text-left text-white hover:bg-gray-800 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
+                        </div>
+                    @endauth
+                    </div>
+                </div>
+            </div>
         </header>
 
 
@@ -162,7 +226,7 @@
         @else
         <!-- Preview Notice -->
         <div class="mb-6 bg-yellow-900/50 border border-yellow-700 rounded-md p-4">
-            <p class="text-yellow-200">📋 This is a preview of the Admin Dashboard. <a href="{{ route('login') }}" class="underline font-semibold">Click here to login</a> to access the full functionality.</p>
+            <p class="text-yellow-200">📋 This is a preview of the Assistant Dashboard. <a href="{{ route('login') }}" class="underline font-semibold">Click here to login</a> to access the full functionality.</p>
         </div>
         @endauth
 
@@ -170,8 +234,13 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <div class="bg-black/60 p-4 rounded-lg border border-blue-900/30">
                 <h3 class="text-blue-400 font-semibold">Total Employees</h3>
-                <p class="text-2xl font-bold">{{ $totalUsers ?? 0 }}</p>
-                <p class="text-xs text-blue-200">Active employees</p>
+                <p class="text-2xl font-bold" id="totalEmployees">{{ $totalEmployees ?? 0 }}</p>
+                <p class="text-xs text-blue-200">All employees</p>
+            </div>
+            <div class="bg-black/60 p-4 rounded-lg border border-blue-900/30">
+                <h3 class="text-blue-400 font-semibold">Active Employees</h3>
+                <p class="text-2xl font-bold" id="activeEmployees">{{ $activeEmployees ?? 0 }}</p>
+                <p class="text-xs text-blue-200">Currently active</p>
             </div>
             <div class="bg-black/60 p-4 rounded-lg border border-blue-900/30">
                 <h3 class="text-blue-400 font-semibold">Products</h3>
@@ -194,6 +263,43 @@
             </div>
         </div>
 
+        <!-- Attendance Statistics -->
+        <div class="bg-black/60 p-6 rounded-lg border border-blue-900/30 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-blue-400">📊 Your Attendance Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-900/50 p-4 rounded-lg border border-blue-900/20">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-blue-300 font-semibold text-sm">Days This Month</h3>
+                        <div class="w-8 h-8 bg-blue-900/50 rounded-lg flex items-center justify-center">
+                            <span class="text-blue-400 text-xs">📅</span>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-white">{{ $daysThisMonth ?? 0 }}</p>
+                    <p class="text-xs text-gray-400">Working days attended</p>
+                </div>
+                <div class="bg-gray-900/50 p-4 rounded-lg border border-blue-900/20">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-blue-300 font-semibold text-sm">Hours Worked</h3>
+                        <div class="w-8 h-8 bg-blue-900/50 rounded-lg flex items-center justify-center">
+                            <span class="text-blue-400 text-xs">⏱️</span>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-white">{{ $hoursWorked ?? '0h 0m' }}</p>
+                    <p class="text-xs text-gray-400">Total time this month</p>
+                </div>
+                <div class="bg-gray-900/50 p-4 rounded-lg border border-blue-900/20">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-blue-300 font-semibold text-sm">Attendance Rate</h3>
+                        <div class="w-8 h-8 bg-blue-900/50 rounded-lg flex items-center justify-center">
+                            <span class="text-blue-400 text-xs">📈</span>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-green-400">{{ $attendanceRate ?? 0 }}%</p>
+                    <p class="text-xs text-gray-400">Monthly percentage</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Admin Functions -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             @auth
@@ -209,6 +315,34 @@
                     <a href="{{ route('employee.list') }}" class="block p-3 bg-gray-800 rounded hover:bg-blue-900/30 transition-colors">
                         <span class="font-medium">👥 Manage Employees</span>
                         <p class="text-xs text-blue-200">View and edit employees</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Attendance Management -->
+            <div class="bg-black/60 p-6 rounded-lg border border-purple-900/30">
+                <h2 class="text-xl font-semibold mb-4 text-purple-400">📊 Attendance Management</h2>
+                <p class="text-sm text-purple-200 mb-4">Complete attendance overview and records</p>
+                <div class="grid grid-cols-1 gap-3">
+                    <a href="{{ route('attendance.records') }}" class="block p-3 bg-gray-800 rounded hover:bg-purple-900/30 transition-colors">
+                        <span class="font-medium">📋  Attendance Records</span>
+                        <p class="text-xs text-purple-200">Complete yearly attendance overview for all employees</p>
+                    </a>
+                    <a href="{{ route('attendance.index') }}" class="block p-3 bg-gray-800 rounded hover:bg-purple-900/30 transition-colors">
+                        <span class="font-medium">📅 Today's Attendance</span>
+                        <p class="text-xs text-purple-200">View current day attendance records</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- TV E-Load Management -->
+            <div class="bg-black/60 p-6 rounded-lg border border-pink-900/30">
+                <h2 class="text-xl font-semibold mb-4 text-pink-400">📺 TV E-Load Management</h2>
+                <p class="text-sm text-pink-200 mb-4">Satellite TV & streaming load management</p>
+                <div class="grid grid-cols-1 gap-3">
+                    <a href="{{ route('admin.tv-eload') }}" class="block p-3 bg-gray-800 rounded hover:bg-pink-900/30 transition-colors">
+                        <span class="font-medium">📺 Television E-Load</span>
+                        <p class="text-xs text-pink-200">Manage TV satellite and streaming loads</p>
                     </a>
                 </div>
             </div>
@@ -340,6 +474,7 @@
                     </form>
                 </div>
             </div>
+
             @else
             <!-- User Management (Preview) -->
             <div class="bg-black/60 p-6 rounded-lg border border-blue-900/30">
@@ -389,7 +524,7 @@
                     <span class="font-medium">🕐 Today's Attendance</span>
                     <p class="text-xs text-blue-200">View current day</p>
                 </a>
-                <a href="{{ route('attendance.records') }}" class="block p-3 bg-gray-800 rounded hover:bg-blue-900/30 transition-colors">
+                <a href="{{ route('attendance.index') }}" class="block p-3 bg-gray-800 rounded hover:bg-blue-900/30 transition-colors">
                     <span class="font-medium">📅 Attendance Records</span>
                     <p class="text-xs text-blue-200">View all records</p>
                 </a>
@@ -447,8 +582,7 @@
                     </div>
                 @else
                     <div class="mt-2 p-2 bg-yellow-900/30 rounded text-sm">
-                        <p class="text-yellow-300">⚠️ No attendance record for current period</p>
-                        <p class="text-xs text-yellow-200">You can check in or check out anytime</p>
+                        <p class="text-xs text-yellow-200">You can check in or check out once a day </p>
                     </div>
                 @endif
             </div>
@@ -489,7 +623,7 @@
                 @else
                 <div>
                     <h3 class="font-semibold text-blue-300">Personal Details</h3>
-                    <p><strong>Name:</strong> Admin Assistant</p>
+                    <p><strong>Name:</strong> Demo Assistant</p>
                     <p><strong>Email:</strong> admin@example.com</p>
                     <p><strong>Position:</strong> Administrative Assistant</p>
                     <p><strong>Salary:</strong> ₱25,000.00</p>
@@ -516,6 +650,39 @@
         </div>
         @endauth
     </div>
+
+    <script>
+        // Real-time employee statistics update
+        function updateEmployeeStats() {
+            fetch('/api/admin/employee-stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update Total Employees
+                    const totalEmployeesEl = document.getElementById('totalEmployees');
+                    if (totalEmployeesEl) {
+                        totalEmployeesEl.textContent = data.totalEmployees;
+                    }
+                    
+                    // Update Active Employees
+                    const activeEmployeesEl = document.getElementById('activeEmployees');
+                    if (activeEmployeesEl) {
+                        activeEmployeesEl.textContent = data.activeEmployees;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching employee stats:', error);
+                });
+        }
+
+        // Auto-refresh employee stats every 60 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial update after 5 seconds
+            setTimeout(updateEmployeeStats, 5000);
+            
+            // Then update every 60 seconds
+            setInterval(updateEmployeeStats, 60000);
+        });
+    </script>
 </body>
 </html>
 

@@ -11,7 +11,7 @@
         <!-- Header -->
         <header class="flex items-center justify-between mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-green-400">🔐 Super Admin Access Control</h1>
+                <h1 class="text-3xl font-bold text-green-400">🔐Admin Access Control</h1>
                 <p class="text-blue-200 text-sm mt-1">Manage access for all user accounts in the system</p>
             </div>
             <div class="flex gap-4">
@@ -103,8 +103,8 @@
                                             @elseif($user->role == 'manager') bg-purple-600
                                             @elseif($user->role == 'employee') bg-yellow-600
                                             @elseif($user->role == 'sales_clerk') bg-orange-600
-                                            @elseif($user->role == 'user') bg-gray-600
-                                            @else bg-red-600 @endif">
+                                            @elseif($user->role == 'super_admin') bg-red-600
+                                            @else bg-gray-600 @endif">
                                             {{ ucfirst($user->role) }}
                                         </span>
                                     </td>

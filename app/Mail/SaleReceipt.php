@@ -14,17 +14,14 @@ class SaleReceipt extends Mailable
 
     public $sale;
     public $items;
-    public $salesReport;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($sale, $items, $salesReport = null)
+    public function __construct($sale, $items = [])
     {
         $this->sale = $sale;
-        // Ensure items is always an array
-        $this->items = is_array($items) ? $items : json_decode($items, true);
-        $this->salesReport = $salesReport;
+        $this->items = is_array($items) ? $items : (json_decode($items, true) ?: []);
     }
 
     /**
@@ -33,10 +30,10 @@ class SaleReceipt extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Sale Receipt - ' . config('app.name'),
+            subject: "Receipt #" . ($this->sale->transaction_id ?? "N/A") . " - Manliquid Store",
             from: new \Illuminate\Mail\Mailables\Address(
-                config('mail.from.address', 'noreply@yourdomain.com'),
-                config('mail.from.name', 'Business System')
+                config("mail.from.address", "manliquidstore@gmail.com"),
+                config("mail.from.name", "Manliquid Store")
             ),
         );
     }
@@ -47,23 +44,19 @@ class SaleReceipt extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.sale-receipt',
+            view: "emails.sale-receipt",
             with: [
-                'sale' => $this->sale,
-                'items' => $this->items,
-                'salesReport' => $this->salesReport,
+                "sale" => $this->sale,
+                "items" => $this->items,
             ],
         );
     }
 
     /**
      * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
     public function attachments(): array
     {
         return [];
     }
 }
-

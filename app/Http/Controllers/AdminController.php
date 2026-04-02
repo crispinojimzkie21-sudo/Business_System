@@ -102,7 +102,10 @@ class AdminController extends Controller
         
         // Get basic stats for admin dashboard
         $totalUsers = User::where('role', 'user')->count();
-        $totalEmployees = User::where('role', 'user')->count();
+        $totalEmployees = User::whereIn('role', ['user', 'employee', 'admin', 'cashier', 'sales_clerk', 'manager', 'super_admin'])->count();
+        $activeEmployees = User::whereIn('role', ['user', 'employee', 'admin', 'cashier', 'sales_clerk', 'manager', 'super_admin'])
+            ->where('status', 'active')
+            ->count();
         $totalProducts = Product::where('stock_quantity', '>', 0)->count();
         $todaySales = Sale::whereDate('created_at', Carbon::today())->sum('total_amount');
         $todayTransactions = Sale::whereDate('created_at', Carbon::today())->count();
@@ -135,10 +138,49 @@ class AdminController extends Controller
         $checkedInToday = $todayAttendanceAll->whereNotNull('check_in')->count();
         $checkedOutToday = $todayAttendanceAll->whereNotNull('check_out')->count();
         
+        // Calculate admin's personal attendance statistics
+        $currentMonth = Carbon::now('Asia/Manila')->month;
+        $currentYear = Carbon::now('Asia/Manila')->year;
+        
+        // Get admin's attendance for current month
+        $adminMonthlyAttendances = Attendance::where('user_id', $user->id)
+            ->whereMonth('date', $currentMonth)
+            ->whereYear('date', $currentYear)
+            ->whereNotNull('check_in')
+            ->get();
+        
+        $daysThisMonth = $adminMonthlyAttendances->count();
+        
+        // Calculate total hours worked this month
+        $totalMinutes = 0;
+        foreach ($adminMonthlyAttendances as $attendance) {
+            if ($attendance->check_in && $attendance->check_out) {
+                $checkIn = Carbon::parse($attendance->check_in);
+                $checkOut = Carbon::parse($attendance->check_out);
+                $minutes = $checkOut->diffInMinutes($checkIn);
+                $totalMinutes += $minutes;
+            } elseif ($attendance->check_in && !$attendance->check_out) {
+                // Currently checked in - calculate time until now
+                $checkIn = Carbon::parse($attendance->check_in);
+                $now = Carbon::now('Asia/Manila');
+                $minutes = $now->diffInMinutes($checkIn);
+                $totalMinutes += $minutes;
+            }
+        }
+        
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        $hoursWorked = $hours . 'h ' . $minutes . 'm';
+        
+        // Calculate attendance rate (based on working days in month)
+        $workingDays = $this->getWorkingDaysInMonth($currentMonth, $currentYear);
+        $attendanceRate = $workingDays > 0 ? round(($daysThisMonth / $workingDays) * 100, 1) : 0;
+        
         return view('dashboard.admin', compact(
             'user', 
             'totalUsers', 
             'totalEmployees',
+            'activeEmployees',
             'totalProducts', 
             'todaySales',
             'todayTransactions',
@@ -152,7 +194,60 @@ class AdminController extends Controller
             'monthlyTransactions',
             'lowStockCount',
             'todayEloadSales',
-            'todayEloadTransactions'
+            'todayEloadTransactions',
+            'daysThisMonth',
+            'hoursWorked',
+            'attendanceRate'
         ));
+    }
+    
+    /**
+     * Get real-time employee statistics for API
+     */
+    public function getEmployeeStats()
+    {
+        try {
+            // Get total employees (all employee roles)
+            $totalEmployees = User::whereIn('role', ['user', 'employee', 'admin', 'cashier', 'sales_clerk', 'manager', 'super_admin'])->count();
+            
+            // Get active employees
+            $activeEmployees = User::whereIn('role', ['user', 'employee', 'admin', 'cashier', 'sales_clerk', 'manager', 'super_admin'])
+                ->where('status', 'active')
+                ->count();
+            
+            return response()->json([
+                'success' => true,
+                'totalEmployees' => $totalEmployees,
+                'activeEmployees' => $activeEmployees
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching employee stats: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get working days in a month (excluding weekends)
+     */
+    private function getWorkingDaysInMonth($month, $year)
+    {
+        $startDate = Carbon::create($year, $month, 1);
+        $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+        
+        $workingDays = 0;
+        $currentDate = $startDate->copy();
+        
+        while ($currentDate <= $endDate) {
+            // Exclude weekends (Saturday = 6, Sunday = 7)
+            if ($currentDate->dayOfWeek < 6) {
+                $workingDays++;
+            }
+            $currentDate->addDay();
+        }
+        
+        return $workingDays;
     }
 }

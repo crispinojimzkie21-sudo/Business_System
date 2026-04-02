@@ -50,14 +50,28 @@ class AttendanceController extends Controller
     }
     public function index()
     {
-        $today = Carbon::today()->format('Y-m-d');
+        // Get current Philippine date
+        $philippineTime = Carbon::now('Asia/Manila');
+        $today = $philippineTime->format('Y-m-d');
+        
+        // For debugging: Let's get all attendance records first to see if any exist
+        $allAttendance = Attendance::with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        // Get today's attendance - use DATE() function to compare date part only
         $todayAttendance = Attendance::with('user')
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->orderBy('created_at', 'desc')
             ->get()
             ->groupBy('user_id');
 
-        return view('attendance.index', compact('todayAttendance'));
+        // For debugging: Log the counts
+        \Log::info("Total attendance records: " . $allAttendance->count());
+        \Log::info("Today's attendance records: " . $todayAttendance->count());
+        \Log::info("Today's date (Philippine): " . $today);
+
+        return view('attendance.index', compact('todayAttendance', 'allAttendance'));
     }
 
     public function records(Request $request)
@@ -323,7 +337,8 @@ class AttendanceController extends Controller
             return back()->with('error', 'User not found.');
         }
 
-        $today = Carbon::today()->format('Y-m-d');
+        $philippineTime = Carbon::now('Asia/Manila');
+        $today = $philippineTime->format('Y-m-d');
 
         // Find today's check-in without check-out for the target user
         $attendance = Attendance::where('user_id', $userId)

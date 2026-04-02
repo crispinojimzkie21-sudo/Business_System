@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\AttendanceEmailList;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class AdminManagementController extends Controller
@@ -157,7 +158,7 @@ class AdminManagementController extends Controller
             'password' => ['required', 'confirmed', 'min:8'],
             'position' => ['nullable', 'string', 'max:255'],
             'salary' => ['nullable', 'numeric', 'min:0'],
-            'role' => ['required', 'in:user,admin,cashier'],
+            'role' => ['required', 'in:employee,admin,cashier'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
             'hire_date' => ['nullable', 'date'],
@@ -184,7 +185,19 @@ class AdminManagementController extends Controller
             'access_enabled' => true, // Enable access by default for all roles
         ]);
 
-        return redirect()->route('employee.list')->with('success', 'Employee account created successfully!');
+        // Automatically add to attendance email list (except super admin)
+        if ($user->role !== 'super_admin') {
+            AttendanceEmailList::create([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'role' => $user->role,
+                'position' => $user->position,
+                'is_active' => true,
+            ]);
+        }
+
+        return redirect()->route('employee.list')->with('success', 'Employee account created successfully and added to attendance list!');
     }
 
     public function listAdmins()
@@ -196,6 +209,12 @@ class AdminManagementController extends Controller
     public function editUser($id)
     {
         $user = User::findOrFail($id);
+        
+        // Prevent super admin from accessing their own edit page
+        if ($user->id === Auth::id() && Auth::user()->isSuperAdmin()) {
+            return back()->with('error', 'Super admin cannot edit their own profile through employee edit. Use Profile menu instead.');
+        }
+        
         return view('employees.edit', compact('user'));
     }
 
@@ -203,12 +222,16 @@ class AdminManagementController extends Controller
     {
         $user = User::findOrFail($id);
         
+        // Prevent super admin from editing their own profile through employee edit
+        if ($user->id === Auth::id() && Auth::user()->isSuperAdmin()) {
+            return back()->with('error', 'Super admin cannot edit their own profile through employee edit. Use Profile menu instead.');
+        }
+        
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $id],
             'position' => ['nullable', 'string', 'max:255'],
             'salary' => ['nullable', 'numeric', 'min:0'],
-            'role' => ['required', 'in:admin,user,cashier'],
+            'role' => ['required', 'in:admin,employee,cashier,sales_clerk,manager,super_admin'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
             'hire_date' => ['nullable', 'date'],
@@ -216,6 +239,7 @@ class AdminManagementController extends Controller
             'employee_id' => ['nullable', 'string', 'max:50', 'unique:users,employee_id,' . $id],
             'employment_status' => ['nullable', 'in:active,inactive,on_leave,terminated'],
             'notes' => ['nullable', 'string'],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
         ]);
 
         if ($request->filled('password')) {
@@ -223,6 +247,17 @@ class AdminManagementController extends Controller
         }
 
         $user->update($data);
+
+        // Update attendance email list if user exists there
+        $attendanceEmailEntry = $user->attendanceEmailList;
+        if ($attendanceEmailEntry) {
+            $attendanceEmailEntry->update([
+                'email' => $user->email,
+                'name' => $user->name,
+                'role' => $user->role,
+                'position' => $user->position,
+            ]);
+        }
 
         return back()->with('success', 'Employee updated successfully!');
     }
@@ -264,14 +299,13 @@ class AdminManagementController extends Controller
         
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $id],
             'position' => ['nullable', 'string', 'max:255'],
             'salary' => ['nullable', 'numeric', 'min:0'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
             'department' => ['nullable', 'string', 'max:255'],
             'employment_status' => ['nullable', 'in:active,inactive,on_leave,terminated'],
-            'role' => ['required', 'in:admin,user'],
+            'role' => ['required', 'in:admin,employee'],
         ]);
 
         if ($request->filled('password')) {
@@ -377,8 +411,8 @@ class AdminManagementController extends Controller
     {
         $user = User::findOrFail($id);
         
-        if (!in_array($user->role, ['admin', 'cashier', 'user'])) {
-            return back()->with('error', 'Can only toggle access for Admins, Cashiers, and Users.');
+        if (!in_array($user->role, ['admin', 'cashier', 'employee'])) {
+            return back()->with('error', 'Can only toggle access for Admins, Cashiers, and Employees.');
         }
 
         $user->access_enabled = !$user->access_enabled;

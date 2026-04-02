@@ -18,6 +18,13 @@ class Kernel extends ConsoleKernel
                 ->description('Automatic database backup')
                 ->runInBackground()
                 ->withoutOverlapping();
+        
+        // Schedule cleanup of old TV E-Load transactions daily at 2 AM
+        $schedule->command('eload:cleanup-old')
+                ->cron('0 2 * * *')  // Daily at 2:00 AM
+                ->description('Clean up TV E-Load transactions older than 1 year')
+                ->runInBackground()
+                ->withoutOverlapping();
     }
 
     /**

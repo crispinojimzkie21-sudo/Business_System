@@ -172,24 +172,37 @@
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-            <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
-                <h3 class="text-green-400 font-semibold">Total Products</h3>
-                <p class="text-2xl font-bold">{{ $products->count() }}</p>
+        @if(Auth::user()->isAdmin() || Auth::user()->isSuperAdmin())
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+                <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
+                    <h3 class="text-green-400 font-semibold">Total Products</h3>
+                    <p class="text-2xl font-bold">{{ $products->count() }}</p>
+                </div>
+                <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
+                    <h3 class="text-green-400 font-semibold">Low Stock</h3>
+                    <p class="text-2xl font-bold text-yellow-400">{{ $lowStockCount ?? 0 }}</p>
+                </div>
+                <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
+                    <h3 class="text-green-400 font-semibold">Out of Stock</h3>
+                    <p class="text-2xl font-bold text-red-400">{{ $outOfStockCount ?? 0 }}</p>
+                </div>
+                <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
+                    <h3 class="text-green-400 font-semibold">Total Value</h3>
+                    <p class="text-2xl font-bold">₱{{ number_format($totalValue ?? 0, 2) }}</p>
+                </div>
             </div>
-            <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
-                <h3 class="text-green-400 font-semibold">Low Stock</h3>
-                <p class="text-2xl font-bold text-yellow-400">{{ $lowStockCount ?? 0 }}</p>
+        @else
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+                <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
+                    <h3 class="text-green-400 font-semibold">Low Stock</h3>
+                    <p class="text-2xl font-bold text-yellow-400">{{ $lowStockCount ?? 0 }}</p>
+                </div>
+                <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
+                    <h3 class="text-green-400 font-semibold">Out of Stock</h3>
+                    <p class="text-2xl font-bold text-red-400">{{ $outOfStockCount ?? 0 }}</p>
+                </div>
             </div>
-            <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
-                <h3 class="text-green-400 font-semibold">Out of Stock</h3>
-                <p class="text-2xl font-bold text-red-400">{{ $outOfStockCount ?? 0 }}</p>
-            </div>
-            <div class="bg-black/60 p-4 rounded-lg border border-green-900/30">
-                <h3 class="text-green-400 font-semibold">Total Value</h3>
-                <p class="text-2xl font-bold">₱{{ number_format($totalValue ?? 0, 2) }}</p>
-            </div>
-        </div>
+        @endif
     </div>
 
     <script>

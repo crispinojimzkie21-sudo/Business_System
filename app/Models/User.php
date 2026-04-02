@@ -120,7 +120,7 @@ class User extends Authenticatable
      */
     public function isEmployee()
     {
-        return $this->role === 'employee';
+        return $this->role === 'employee' || $this->role === 'user';
     }
 
     /**

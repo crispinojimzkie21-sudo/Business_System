@@ -17,11 +17,26 @@ class EloadTransaction extends Model
         'price',
         'status',
         'transaction_id',
+        // TV E-Load fields
+        'mobile_number',
+        'amount',
+        'network',
+        'transaction_type',
+        'reference_number',
+        'customer_name',
+        'customer_contact',
+        'provider', // Add provider field to fillable
+        'provider_response',
+        'completed_at',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'amount' => 'decimal:2',
         'status' => 'string',
+        'transaction_type' => 'string',
+        'provider_response' => 'array',
+        'completed_at' => 'datetime',
     ];
 
     /**
