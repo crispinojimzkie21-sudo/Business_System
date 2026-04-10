@@ -1,0 +1,58 @@
+# RM Manliquid Business System - Production Environment
+# Copy this content to your .env file on the server
+
+APP_NAME="RM Manliquid Business System"
+APP_ENV=production
+APP_KEY=base64:GENERATE_NEW_KEY_ON_SERVER
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+
+# Database Configuration (Update with your server details)
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database_name
+DB_USERNAME=your_database_user
+DB_PASSWORD=your_secure_password
+
+# Session Security
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=true
+SESSION_PATH=/
+SESSION_DOMAIN=your-domain.com
+
+# Cache Configuration
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+
+# Mail Configuration (Update with your email settings)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@your-domain.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+# Security Settings
+FORCE_HTTPS=true
+BCRYPT_ROUNDS=12
+
+# Log Configuration
+LOG_CHANNEL=stack
+LOG_LEVEL=error
+
+# File System
+FILESYSTEM_DISK=local
+
+# Vite
+VITE_APP_NAME="${APP_NAME}"
+
+# IMPORTANT: Run these commands on your server after updating .env:
+# 1. php artisan key:generate
+# 2. php artisan config:cache
+# 3. php artisan route:cache
+# 4. php artisan view:cache
+# 5. php artisan migrate --force
