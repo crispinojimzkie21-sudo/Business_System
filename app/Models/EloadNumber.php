@@ -10,10 +10,15 @@ class EloadNumber extends Model
     use HasFactory;
 
     protected $fillable = [
+        'eload_id',
         'number',
         'network',
         'status',
         'description',
+        'provider',
+        'number_type',
+        'is_active',
+        'priority',
     ];
 
     protected $casts = [

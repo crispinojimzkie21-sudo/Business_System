@@ -37,7 +37,7 @@
         @endif
 
         <!-- Multiple Load Form -->
-        <form method="POST" action="{{ Auth::user()->isSuperAdmin() ? route('eload.process-multiple-loads') : route('admin.eload.process-multiple-loads') }}" class="bg-black/60 p-6 rounded-lg border border-purple-900/30">
+        <form method="POST" action="{{ Auth::user()->role === 'super_admin' ? route('eload.process-multiple-loads') : route('admin.eload.process-multiple-loads') }}" class="bg-black/60 p-6 rounded-lg border border-purple-900/30">
             @csrf
             
             <!-- Load Entries Container -->
@@ -69,7 +69,7 @@
                             <label class="block text-purple-200 mb-1 text-sm">Status</label>
                             <select name="loads[0][status]" class="w-full px-3 py-2 bg-gray-700 border border-purple-900/30 rounded text-white focus:outline-none focus:border-purple-500" required>
                                 <option value="completed">✅ Completed</option>
-                                <option value="not_completed">⏳ Not Completed</option>
+                                <option value="pending">Pending</option>
                             </select>
                         </div>
                     </div>
@@ -101,7 +101,7 @@
             <!-- Submit Buttons -->
             <div class="flex gap-3">
                 <button type="submit" class="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded font-medium">Process All Loads</button>
-                <a href="{{ Auth::user()->isSuperAdmin() ? route('eload.transactions.history') : route('admin.eload.transactions.history') }}" class="px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded">History</a>
+                <a href="{{ Auth::user()->role === 'super_admin' ? route('eload.transactions.history') : route('admin.eload.transactions.history') }}" class="px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded">History</a>
             </div>
         </form>
 
@@ -113,7 +113,7 @@
 
         <!-- Back Link -->
         <div class="mt-4 text-center">
-            <a href="{{ Auth::user()->isSuperAdmin() ? route('eload.add-load') : route('admin.eload.add-load') }}" class="text-purple-300 hover:text-purple-200 text-sm">← Switch to Single Load Entry</a>
+            <a href="{{ Auth::user()->role === 'super_admin' ? route('eload.add-load') : route('admin.eload.add-load') }}" class="text-purple-300 hover:text-purple-200 text-sm">← Switch to Single Load Entry</a>
         </div>
 
     </div>
@@ -155,7 +155,7 @@
                         <label class="block text-purple-200 mb-1 text-sm">Status</label>
                         <select name="loads[${entryCount - 1}][status]" class="w-full px-3 py-2 bg-gray-700 border border-purple-900/30 rounded text-white focus:outline-none focus:border-purple-500" required>
                             <option value="completed">✅ Completed</option>
-                            <option value="not_completed">⏳ Not Completed</option>
+                            <option value="pending">Pending</option>
                         </select>
                     </div>
                 </div>

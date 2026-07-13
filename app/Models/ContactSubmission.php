@@ -13,6 +13,5 @@ class ContactSubmission extends Model
         'company',
         'email',
         'message',
-        'status',
     ];
 }

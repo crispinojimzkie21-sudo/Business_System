@@ -154,7 +154,7 @@ class TelevisionEloadController extends Controller
                 'provider' => 'required|string',
                 'amount' => 'required|numeric|min:50|max:10000',
                 'customer_name' => 'nullable|string|max:100',
-                'customer_contact' => 'nullable|string|max:20',
+                'customer_mobile' => 'nullable|string|max:20',
             ]);
             
             // Try to use existing eload_id and eload_number_id, or create fallback values
@@ -173,11 +173,16 @@ class TelevisionEloadController extends Controller
                 'user_id' => auth()->id() ?: 8, // Use authenticated user ID or fallback to super admin (ID 8)
                 'eload_number' => trim($request->account_number), // TV account number
                 'price' => $request->amount, // TV load amount
+                'original_price' => $request->amount, // Add original_price
+                'amount' => $request->amount, // Add amount field
+                'customer_name' => $request->customer_name ?? 'Walk-in Customer',
+                'customer_mobile' => $request->customer_mobile ?? 'N/A',
+                'network' => $request->provider, // Add network field
+                'provider' => $request->provider,
                 'status' => 'completed',
                 'transaction_id' => 'TVL' . strtoupper(uniqid()), // TV reference
-                'customer_name' => $request->customer_name,
-                'customer_contact' => $request->customer_contact,
-                'provider' => $request->provider,
+                'reference_number' => 'REF-' . date('YmdHis') . '-' . rand(100, 999), // Add reference_number
+                'processed_by' => auth()->id() ?: 8, // Add processed_by
                 'created_at' => Carbon::now('Asia/Manila'),
                 'updated_at' => Carbon::now('Asia/Manila'),
             ]);
@@ -194,7 +199,7 @@ class TelevisionEloadController extends Controller
                     'network' => $request->provider, // Add provider for display
                     'provider' => $request->provider, // Add provider field for display
                     'customer_name' => $request->customer_name ?? 'Walk-in Customer', // Add customer for display
-                    'customer_contact' => $request->customer_contact ?? 'N/A', // Add contact for display
+                    'customer_mobile' => $request->customer_mobile ?? 'N/A', // Add contact for display
                     'created_at' => $transaction->created_at,
                 ]
             ]);
@@ -787,7 +792,7 @@ class TelevisionEloadController extends Controller
                     $transaction->mobile_number,
                     $transaction->network,
                     $transaction->customer_name ?? 'N/A',
-                    $transaction->customer_contact ?? 'N/A',
+                    $transaction->customer_mobile ?? 'N/A',
                     $transaction->amount,
                     $transaction->status,
                     $transaction->user->name,

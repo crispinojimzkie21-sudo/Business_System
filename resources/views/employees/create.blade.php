@@ -156,7 +156,9 @@
 
                         <select name="role" class="w-full px-4 py-2 border border-gray-700 bg-black/40 rounded-md text-white" required>
 
-                            <option value="user">Employee (Sales Clerk)</option>
+                            <option value="employee">Employee</option>
+
+                            <option value="sales_clerk">Employee (Sales Clerk)</option>
 
                             <option value="cashier">Cashier</option>
 

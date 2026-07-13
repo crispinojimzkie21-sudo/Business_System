@@ -330,50 +330,265 @@ class SuperAdminController extends Controller
         return view('superadmin.access-control', compact('users', 'disabledCount', 'enabledCount', 'roleStats'));
     }
 
+    
+    /**
+     * Real-time statistics for monitoring user accounts and attendance
+     */
+    public function realTimeStats()
+    {
+        try {
+            // Get current user counts by role
+            $totalEmployees = User::where('role', '!=', 'super_admin')->count();
+            $superAdminCount = User::where('role', 'super_admin')->count();
+            $adminCount = User::where('role', 'admin')->count();
+            $employeeCount = User::where('role', 'employee')->count();
+            $salesClerkCount = User::where('role', 'sales_clerk')->count();
+            $cashierCount = User::where('role', 'cashier')->count();
+            $managerCount = User::where('role', 'manager')->count();
+            
+            // Get today's attendance data
+            $todayPhilippine = Carbon::now('Asia/Manila')->format('Y-m-d');
+            $todayAttendances = Attendance::with('user')
+                ->whereDate('date', $todayPhilippine)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            $checkedInToday = $todayAttendances->where('check_in', '!=', null)->count();
+            $checkedOutToday = $todayAttendances->where('check_out', '!=', null)->count();
+            $currentlyWorking = $todayAttendances->where('check_in', '!=', null)->where('check_out', null)->count();
+            $absentToday = $totalEmployees - $checkedInToday;
+            $attendanceRate = $totalEmployees > 0 ? round(($checkedInToday / $totalEmployees) * 100, 1) : 0;
+            
+            // Get recently created users (last 24 hours)
+            $recentUsers = User::where('created_at', '>=', Carbon::now('Asia/Manila')->subHours(24))
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+            
+            // Get attendance records for new employees
+            $newEmployeeAttendance = [];
+            foreach ($recentUsers as $user) {
+                $employeeRoles = ['employee', 'sales_clerk', 'cashier', 'manager', 'admin'];
+                if (in_array($user->role, $employeeRoles)) {
+                    $attendanceRecords = Attendance::where('user_id', $user->id)
+                        ->where('date', '>=', Carbon::now('Asia/Manila')->subDays(7))
+                        ->orderBy('date', 'desc')
+                        ->take(5)
+                        ->get();
+                    
+                    $newEmployeeAttendance[] = [
+                        'user' => [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'role' => $user->role,
+                            'created_at' => Carbon::parse($user->created_at)->format('M d, H:i'),
+                            'time_ago' => Carbon::parse($user->created_at)->diffForHumans(Carbon::now(), true)
+                        ],
+                        'attendance_records' => $attendanceRecords->map(function($record) {
+                            return [
+                                'date' => $record->date,
+                                'check_in' => $record->check_in ? Carbon::parse($record->check_in)->format('h:i A') : null,
+                                'check_out' => $record->check_out ? Carbon::parse($record->check_out)->format('h:i A') : null,
+                                'status' => $record->status ?? 'pending',
+                                'notes' => $record->notes
+                            ];
+                        }),
+                        'total_records' => $attendanceRecords->count()
+                    ];
+                }
+            }
+            
+            // Get system statistics
+            $totalUsers = User::count();
+            $activeUsers = User::whereNotNull('email_verified_at')->count();
+            $disabledUsers = User::where('access_enabled', false)->count();
+            
+            // Get monthly attendance data for the current year
+            $currentYear = Carbon::now('Asia/Manila')->year;
+            $monthlyData = [];
+            
+            for ($month = 1; $month <= 12; $month++) {
+                $monthAttendances = Attendance::whereYear('date', $currentYear)
+                    ->whereMonth('date', $month)
+                    ->get();
+                    
+                $present = $monthAttendances->whereNotNull('check_in')->count();
+                $absent = ($totalEmployees * 22) - $present; // Assuming 22 working days per month
+                $late = $monthAttendances->whereNotNull('check_in')
+                    ->filter(function($attendance) {
+                        $checkInTime = Carbon::parse($attendance->check_in);
+                        return $checkInTime->hour > 8 || ($checkInTime->hour == 8 && $checkInTime->minute > 0);
+                    })->count();
+                    
+                $rate = $totalEmployees > 0 ? round(($present / ($totalEmployees * 22)) * 100, 1) : 0;
+                
+                $monthlyData[] = [
+                    'month' => $month,
+                    'month_name' => Carbon::createFromDate($currentYear, $month, 1)->format('M'),
+                    'present' => $present,
+                    'absent' => $absent,
+                    'late' => $late,
+                    'rate' => $rate
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s'),
+                'user_stats' => [
+                    'total_employees' => $totalEmployees,
+                    'super_admin_count' => $superAdminCount,
+                    'admin_count' => $adminCount,
+                    'employee_count' => $employeeCount,
+                    'sales_clerk_count' => $salesClerkCount,
+                    'cashier_count' => $cashierCount,
+                    'manager_count' => $managerCount,
+                    'total_users' => $totalUsers,
+                    'active_users' => $activeUsers,
+                    'disabled_users' => $disabledUsers
+                ],
+                'attendance_stats' => [
+                    'checked_in_today' => $checkedInToday,
+                    'checked_out_today' => $checkedOutToday,
+                    'currently_working' => $currentlyWorking,
+                    'absent_today' => $absentToday,
+                    'attendance_rate' => $attendanceRate,
+                    'date' => $todayPhilippine
+                ],
+                'recent_activity' => [
+                    'new_users' => $recentUsers->map(function($user) {
+                        return [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'role' => $user->role,
+                            'created_at' => Carbon::parse($user->created_at)->format('M d, H:i'),
+                            'time_ago' => Carbon::parse($user->created_at)->diffForHumans(Carbon::now(), true)
+                        ];
+                    }),
+                    'new_employee_attendance' => $newEmployeeAttendance
+                ],
+                'monthly_data' => $monthlyData,
+                'notifications' => [
+                    'new_user_count' => $recentUsers->count(),
+                    'has_new_users' => $recentUsers->count() > 0
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load real-time statistics: ' . $e->getMessage(),
+                'timestamp' => Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')
+            ]);
+        }
+    }
+
     /**
      * Refresh attendance data for Super Admin dashboard
      */
     public function refreshAttendances()
     {
-        // Get today's attendance data for all users (entire day, not just current period)
-        $todayPhilippine = Carbon::now('Asia/Manila')->format('Y-m-d');
-        
-        $todayAttendances = Attendance::with('user')
-            ->whereDate('date', $todayPhilippine)
-            ->orderBy('created_at', 'desc')
-            ->get();
-        
-        $checkedInToday = $todayAttendances->where('check_in', '!=', null)->count();
-        $checkedOutToday = $todayAttendances->where('check_out', '!=', null)->count();
-        $currentlyWorking = $todayAttendances->where('check_in', '!=', null)->where('check_out', null)->count();
-        
-        // Get total employees (excluding super admin)
-        $totalEmployees = User::whereIn('role', ['employee', 'admin', 'cashier', 'manager'])->count();
-        
-        // Calculate today's attendance rate
-        $attendanceRate = $totalEmployees > 0 ? round(($checkedInToday / $totalEmployees) * 100, 1) : 0;
-        
-        // Return JSON data for real-time update
-        return response()->json([
-            'checkedInToday' => $checkedInToday,
-            'checkedOutToday' => $checkedOutToday,
-            'currentlyWorking' => $currentlyWorking,
-            'totalEmployees' => $totalEmployees,
-            'attendanceRate' => $attendanceRate,
-            'presentToday' => $checkedInToday,
-            'absentToday' => $totalEmployees - $checkedInToday,
-            'date' => $todayPhilippine,
-            'attendances' => $todayAttendances->map(function($attendance) {
-                return [
-                    'user_name' => $attendance->user->name,
-                    'user_email' => $attendance->user->email,
-                    'check_in' => $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('h:i A') : null,
-                    'check_out' => $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('h:i A') : null,
-                    'location' => $attendance->check_in_location ?? 'Unknown',
-                    'time_ago' => $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->diffForHumans(\Carbon\Carbon::now(), true) : null
+        try {
+            // Get today's attendance data for all users (entire day, not just current period)
+            $todayPhilippine = Carbon::now('Asia/Manila')->format('Y-m-d');
+            
+            $todayAttendances = Attendance::with('user')
+                ->whereDate('date', $todayPhilippine)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            $checkedInToday = $todayAttendances->where('check_in', '!=', null)->count();
+            $checkedOutToday = $todayAttendances->where('check_out', '!=', null)->count();
+            $currentlyWorking = $todayAttendances->where('check_in', '!=', null)->where('check_out', null)->count();
+            
+            // Get total employees (excluding super admin)
+            $totalEmployees = User::where('role', '!=', 'super_admin')->count();
+            
+            // Calculate today's attendance rate
+            $attendanceRate = $totalEmployees > 0 ? round(($checkedInToday / $totalEmployees) * 100, 1) : 0;
+            
+            // Get monthly attendance data for the current year
+            $currentYear = Carbon::now('Asia/Manila')->year;
+            $monthlyData = [];
+            
+            for ($month = 1; $month <= 12; $month++) {
+                $monthAttendances = Attendance::whereYear('date', $currentYear)
+                    ->whereMonth('date', $month)
+                    ->get();
+                    
+                $present = $monthAttendances->whereNotNull('check_in')->count();
+                $absent = ($totalEmployees * 22) - $present; // Assuming 22 working days per month
+                $late = $monthAttendances->whereNotNull('check_in')
+                    ->filter(function($attendance) {
+                        $checkInTime = Carbon::parse($attendance->check_in);
+                        return $checkInTime->hour > 8 || ($checkInTime->hour == 8 && $checkInTime->minute > 0);
+                    })->count();
+                    
+                $rate = $totalEmployees > 0 ? round(($present / ($totalEmployees * 22)) * 100, 1) : 0;
+                
+                $monthlyData[] = [
+                    'month' => $month,
+                    'month_name' => Carbon::createFromDate($currentYear, $month, 1)->format('M'),
+                    'present' => $present,
+                    'absent' => $absent,
+                    'late' => $late,
+                    'rate' => $rate
                 ];
-            })
-        ]);
+            }
+            
+            // Return JSON data for real-time update
+            return response()->json([
+                'checkedInToday' => $checkedInToday,
+                'checkedOutToday' => $checkedOutToday,
+                'currentlyWorking' => $currentlyWorking,
+                'totalEmployees' => $totalEmployees,
+                'attendanceRate' => $attendanceRate,
+                'presentToday' => $checkedInToday,
+                'absentToday' => $totalEmployees - $checkedInToday,
+                'date' => $todayPhilippine,
+                'monthlyData' => $monthlyData,
+                'attendances' => $todayAttendances->map(function($attendance) {
+                    try {
+                        return [
+                            'user_name' => $attendance->user ? $attendance->user->name : 'Unknown User',
+                            'user_email' => $attendance->user ? $attendance->user->email : 'unknown@example.com',
+                            'check_in' => $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('h:i A') : null,
+                            'check_out' => $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('h:i A') : null,
+                            'location' => $attendance->check_in_location ?? 'Manual Check-in',
+                            'time_ago' => $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->diffForHumans(\Carbon\Carbon::now(), true) : null
+                        ];
+                    } catch (\Exception $e) {
+                        return [
+                            'user_name' => 'Error',
+                            'user_email' => 'error@example.com',
+                            'check_in' => null,
+                            'check_out' => null,
+                            'location' => 'Error loading data',
+                            'time_ago' => null
+                        ];
+                    }
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            // Return error response if something goes wrong
+            return response()->json([
+                'error' => true,
+                'message' => 'Failed to load attendance data: ' . $e->getMessage(),
+                'checkedInToday' => 0,
+                'checkedOutToday' => 0,
+                'currentlyWorking' => 0,
+                'totalEmployees' => 0,
+                'attendanceRate' => 0,
+                'presentToday' => 0,
+                'absentToday' => 0,
+                'date' => Carbon::now('Asia/Manila')->format('Y-m-d'),
+                'monthlyData' => [],
+                'attendances' => []
+            ]);
+        }
     }
 
     /**
@@ -528,7 +743,7 @@ class SuperAdminController extends Controller
         $currentMonth = $philippineTime->month;
         
         // Get all employees (excluding super admin)
-        $employees = User::whereIn('role', ['employee', 'admin', 'cashier', 'manager'])
+        $employees = User::where('role', '!=', 'super_admin')
             ->orderBy('name')
             ->get();
         
@@ -554,7 +769,7 @@ class SuperAdminController extends Controller
             ->get();
         
         $checkedInToday = $todayAttendances->where('check_in', '!=', null)->count();
-        $totalEmployees = User::whereIn('role', ['employee', 'admin', 'cashier', 'manager'])->count();
+        $totalEmployees = User::where('role', '!=', 'super_admin')->count();
         $absentToday = $totalEmployees - $checkedInToday;
         $attendanceRateToday = $totalEmployees > 0 ? round(($checkedInToday / $totalEmployees) * 100, 1) : 0;
         

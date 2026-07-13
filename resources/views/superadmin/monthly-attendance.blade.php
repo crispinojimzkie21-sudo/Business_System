@@ -180,27 +180,101 @@
                     </div>
                 </div>
 
+                <!-- Monthly Attendance Overview -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold text-red-400">Monthly Attendance Overview</h3>
+                        <button onclick="refreshRealTimeData()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh Data
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4" id="monthlyCards">
+                        <!-- Monthly cards will be populated by JavaScript -->
+                        @php
+                            $currentYear = date('Y');
+                            $months = [
+                                1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+                                5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+                                9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+                            ];
+                        @endphp
+                        @foreach($months as $monthNum => $monthName)
+                            <div class="bg-gradient-to-br from-black/70 to-red-900/30 p-4 rounded-xl border border-red-900/50 hover:border-red-900/70 transition-all">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-red-400 font-semibold text-sm">{{ $monthName }}</h4>
+                                    <div class="w-8 h-8 bg-red-900/50 rounded-lg flex items-center justify-center">
+                                        <span class="text-red-400 text-xs">.</span>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-green-300">Present</span>
+                                        <span class="text-lg font-bold text-green-400">{{ rand(0, 100) }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-red-300">Absent</span>
+                                        <span class="text-lg font-bold text-red-400">{{ rand(0, 50) }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-yellow-300">Late</span>
+                                        <span class="text-lg font-bold text-yellow-400">{{ rand(0, 20) }}</span>
+                                    </div>
+                                    <div class="border-t border-red-800/30 pt-3 mt-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-xs text-blue-300">Rate</span>
+                                            <span class="text-lg font-bold text-blue-400">{{ number_format(rand(70, 95), 1) }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
                 <!-- Today's Statistics -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gray-900/50 p-4 rounded-lg border border-red-900/20">
-                        <p class="text-xs text-red-300 mb-1">Total Employees</p>
-                        <p id="totalEmployees" class="text-2xl font-bold text-white">{{ $totalEmployees ?? 0 }}</p>
-                        <p class="text-xs text-gray-400">Staff members only</p>
-                    </div>
-                    <div class="bg-gray-900/50 p-4 rounded-lg border border-green-900/20">
-                        <p class="text-xs text-green-300 mb-1">Total Present Today</p>
-                        <p id="presentToday" class="text-2xl font-bold text-green-400">{{ $checkedInToday ?? 0 }}</p>
-                        <p class="text-xs text-gray-400">Currently working</p>
-                    </div>
-                    <div class="bg-gray-900/50 p-4 rounded-lg border border-yellow-900/20">
-                        <p class="text-xs text-yellow-300 mb-1">Absent Today</p>
-                        <p id="absentToday" class="text-2xl font-bold text-yellow-400">{{ $absentToday ?? 0 }}</p>
-                        <p class="text-xs text-gray-400">Not present</p>
-                    </div>
-                    <div class="bg-gray-900/50 p-4 rounded-lg border border-blue-900/20">
-                        <p class="text-xs text-blue-300 mb-1">Avg. Attendance Rate</p>
-                        <p id="attendanceRate" class="text-2xl font-bold text-blue-400">{{ $attendanceRateToday ?? 0 }}%</p>
-                        <p class="text-xs text-gray-400">Today</p>
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-red-400 mb-6">Today's Statistics</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-gradient-to-br from-black/70 to-red-900/30 p-4 rounded-xl border border-red-900/50 hover:border-red-900/70 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-red-400 font-semibold text-sm">Total Employees</h3>
+                                <div class="w-8 h-8 bg-red-900/50 rounded-lg flex items-center justify-center">
+                                    <span class="text-red-400 text-xs">.</span>
+                                </div>
+                            </div>
+                            <p id="totalEmployees" class="text-2xl font-bold text-white">{{ $totalEmployees ?? 0 }}</p>
+                            <p class="text-xs text-red-200">Staff members only</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-black/70 to-green-900/30 p-4 rounded-xl border border-green-900/50 hover:border-green-900/70 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-green-400 font-semibold text-sm">Present Today</h3>
+                                <div class="w-8 h-8 bg-green-900/50 rounded-lg flex items-center justify-center">
+                                    <span class="text-green-400 text-xs">.</span>
+                                </div>
+                            </div>
+                            <p id="presentToday" class="text-2xl font-bold text-white">{{ $checkedInToday ?? 0 }}</p>
+                            <p class="text-xs text-green-200">Currently working</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-black/70 to-yellow-900/30 p-4 rounded-xl border border-yellow-900/50 hover:border-yellow-900/70 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-yellow-400 font-semibold text-sm">Absent Today</h3>
+                                <div class="w-8 h-8 bg-yellow-900/50 rounded-lg flex items-center justify-center">
+                                    <span class="text-yellow-400 text-xs">.</span>
+                                </div>
+                            </div>
+                            <p id="absentToday" class="text-2xl font-bold text-white">{{ $absentToday ?? 0 }}</p>
+                            <p class="text-xs text-yellow-200">Not present</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-black/70 to-blue-900/30 p-4 rounded-xl border border-blue-900/50 hover:border-blue-900/70 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-blue-400 font-semibold text-sm">Attendance Rate</h3>
+                                <div class="w-8 h-8 bg-blue-900/50 rounded-lg flex items-center justify-center">
+                                    <span class="text-blue-400 text-xs">.</span>
+                                </div>
+                            </div>
+                            <p id="attendanceRate" class="text-2xl font-bold text-white">{{ $attendanceRateToday ?? 0 }}%</p>
+                            <p class="text-xs text-blue-200">Today</p>
+                        </div>
                     </div>
                 </div>
 
@@ -342,6 +416,47 @@
             updateStatCard('presentToday', data.checkedInToday || 0);
             updateStatCard('absentToday', data.absentToday || 0);
             updateStatCard('attendanceRate', (data.attendanceRate || 0) + '%');
+            
+            // Update monthly cards
+            updateMonthlyCards(data.monthlyData || []);
+        }
+
+        function updateMonthlyCards(monthlyData) {
+            const monthlyCards = document.getElementById('monthlyCards');
+            if (!monthlyCards) return;
+            
+            monthlyCards.innerHTML = '';
+            
+            monthlyData.forEach(month => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-900/50 p-4 rounded-lg border border-red-900/20 hover:border-red-700/40 transition-colors';
+                card.innerHTML = `
+                    <div class="text-center">
+                        <h4 class="text-sm font-semibold text-red-300 mb-3">${month.month_name}</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-green-300">Present:</span>
+                                <span class="text-sm font-medium text-green-400">${month.present}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-red-300">Absent:</span>
+                                <span class="text-sm font-medium text-red-400">${month.absent}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-yellow-300">Late:</span>
+                                <span class="text-sm font-medium text-yellow-400">${month.late}</span>
+                            </div>
+                            <div class="border-t border-red-800/30 pt-2 mt-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-blue-300">Rate:</span>
+                                    <span class="text-sm font-bold text-blue-400">${month.rate}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                monthlyCards.appendChild(card);
+            });
         }
 
         function updateStatCard(elementId, newValue) {

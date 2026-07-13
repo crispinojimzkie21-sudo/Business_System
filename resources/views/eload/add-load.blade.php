@@ -37,7 +37,7 @@
         @endif
 
         <!-- Simple Add Load Form -->
-        <form method="POST" action="{{ Auth::user()->isSuperAdmin() ? route('eload.process-load') : route('admin.eload.process-load') }}" class="bg-black/60 p-6 rounded-lg border border-purple-900/30">
+        <form method="POST" action="{{ Auth::user()->role === 'super_admin' ? route('eload.process-load') : route('admin.eload.process-load') }}" class="bg-black/60 p-6 rounded-lg border border-purple-900/30">
             @csrf
 
             <!-- Step 1: Network (Customizable) -->
@@ -80,15 +80,15 @@
             <div class="mb-6">
                 <label class="block text-purple-200 mb-2 font-medium">4. Status</label>
                 <select name="status" class="w-full px-4 py-3 bg-gray-800 border border-purple-900/30 rounded text-white focus:outline-none focus:border-purple-500" required>
-                    <option value="not_completed" {{ old('status', 'not_completed') === 'not_completed' ? 'selected' : '' }}>⏳ Not Completed</option>
-                    <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>✅ Completed</option>
+                    <option value="pending" {{ old('status', 'pending') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>Completed</option>
                 </select>
             </div>
 
             <!-- Step 5: Submit -->
             <div class="flex gap-3">
                 <button type="submit" class="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded font-medium">Process Load</button>
-                <a href="{{ Auth::user()->isSuperAdmin() ? route('eload.transactions.history') : route('admin.eload.transactions.history') }}" class="px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded">History</a>
+                <a href="{{ Auth::user()->role === 'super_admin' ? route('eload.transactions.history') : route('admin.eload.transactions.history') }}" class="px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded">History</a>
             </div>
         </form>
 
@@ -100,7 +100,7 @@
 
         <!-- Back Link -->
         <div class="mt-4 text-center space-y-2">
-            <a href="{{ Auth::user()->isSuperAdmin() ? route('eload.add-load-multiple') : route('admin.eload.add-load-multiple') }}" class="text-purple-300 hover:text-purple-200 text-sm">📱 Add Multiple Loads Instead</a>
+            <a href="{{ Auth::user()->role === 'super_admin' ? route('eload.add-load-multiple') : route('admin.eload.add-load-multiple') }}" class="text-purple-300 hover:text-purple-200 text-sm">📱 Add Multiple Loads Instead</a>
             <br>
             <a href="{{ route('eload.index') }}" class="text-purple-300 hover:text-purple-200 text-sm">← Back to E-Load Products</a>
         </div>

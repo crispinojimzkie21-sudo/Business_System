@@ -36,7 +36,7 @@
             <!-- Desktop Navigation -->
             <div class="hidden md:flex items-center gap-4">
                 <a href="{{ route('superadmin.monthly-attendance') }}" class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-sm">
-                    <i class="fas fa-chart-bar mr-1"></i>📊 Monthly Attendance
+                    <i class="fas fa-chart-bar mr-1"></i>Monthly Attendance
                 </a>
                 <a href="{{ route('television-eload.dashboard') }}" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm">
                     <i class="fas fa-tv mr-1"></i>📺 TV E-Load
@@ -401,84 +401,87 @@
             </div>
         </div>
 
-        <!-- System Information -->
-        <div class="bg-black/60 p-6 rounded-lg border border-red-900/30">
-            <h2 class="text-xl font-semibold mb-4 text-red-400">🔧 System Information</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
-                <div>
-                    <h3 class="font-semibold text-red-300">System Status</h3>
-                    <p class="text-green-400">✅ All systems operational</p>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-red-300">Database</h3>
-                    <p class="text-green-400">✅ Connected</p>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-red-300">Last Backup</h3>
-                    @if($backupStatus['backup_available'])
-                        <p class="text-green-400">✅ {{ \Carbon\Carbon::parse($backupStatus['last_backup_date'])->format('M d, Y h:i A') }}</p>
-                    @else
-                        <p class="text-yellow-400">⚠️ Not configured</p>
-                    @endif
-                </div>
-            </div>
-            
-            <!-- Backup Controls -->
-            <div class="border-t border-red-900/30 pt-4">
-                <h3 class="font-semibold text-red-300 mb-3">🗄️ Backup Management</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-gray-900/50 p-3 rounded-lg border border-red-900/20">
-                        <p class="text-xs text-red-300 mb-2">Available Backups</p>
-                        <p class="text-lg font-bold text-white">{{ $backupStatus['backup_count'] }}</p>
-                        <p class="text-xs text-gray-400">Database files</p>
+        <!-- System Information + User Information (aligned two-column layout) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- System Information -->
+            <div class="bg-black/60 p-6 rounded-lg border border-red-900/30">
+                <h2 class="text-xl font-semibold mb-4 text-red-400">🔧 System Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
+                    <div>
+                        <h3 class="font-semibold text-red-300">System Status</h3>
+                        <p class="text-green-400">✅ All systems operational</p>
                     </div>
-                    <div class="bg-gray-900/50 p-3 rounded-lg border border-red-900/20">
-                        <p class="text-xs text-red-300 mb-2">Auto-Backup</p>
-                        <p class="text-sm text-green-400">✅ Every 6 hours</p>
-                        <p class="text-xs text-gray-400">Scheduled</p>
+                    <div>
+                        <h3 class="font-semibold text-red-300">Database</h3>
+                        <p class="text-green-400">✅ Connected</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-red-300">Last Backup</h3>
+                        @if($backupStatus['backup_available'])
+                            <p class="text-green-400">✅ {{ \Carbon\Carbon::parse($backupStatus['last_backup_date'])->format('M d, Y h:i A') }}</p>
+                        @else
+                            <p class="text-yellow-400">⚠️ Not configured</p>
+                        @endif
                     </div>
                 </div>
-                
-                <div class="flex flex-wrap gap-2 mt-4">
-                    <form action="{{ route('admin.backup.create') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors">
-                            💾 Create Backup Now
-                        </button>
-                    </form>
-                    @if($backupStatus['backup_count'] > 0)
-                        <a href="{{ route('admin.backup.list') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">
-                            📋 View Backups
-                        </a>
-                    @endif
-                </div>
-                
-                @if(!$backupStatus['backup_available'])
-                    <div class="mt-3 p-2 bg-yellow-900/30 rounded text-xs text-yellow-300">
-                        <p>⚠️ No backup history found. Create your first backup to protect your data.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
 
-        <!-- User Information -->
-        <div class="bg-black/60 p-4 md:p-6 rounded-lg border border-red-900/30">
-            <h2 class="text-xl font-semibold mb-3 md:mb-4 text-red-400">👤 Your Information</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                    <h3 class="font-semibold text-red-300 mb-2">Personal Details</h3>
-                    <p><strong>Name:</strong> Kenjie </p>
-                    <p><strong>Email:</strong> {{ Auth::user()->email }}</p>
-                    <p><strong>Position:</strong> {{ Auth::user()->position ?? 'Developer' }}</p>
-                    <p><strong>Salary:</strong> ₱{{ number_format(Auth::user()->salary ?? 0, 2) }}</p>
+                <!-- Backup Controls -->
+                <div class="border-t border-red-900/30 pt-4">
+                    <h3 class="font-semibold text-red-300 mb-3">🗄️ Backup Management</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-900/50 p-3 rounded-lg border border-red-900/20">
+                            <p class="text-xs text-red-300 mb-2">Available Backups</p>
+                            <p class="text-lg font-bold text-white">{{ $backupStatus['backup_count'] }}</p>
+                            <p class="text-xs text-gray-400">Database files</p>
+                        </div>
+                        <div class="bg-gray-900/50 p-3 rounded-lg border border-red-900/20">
+                            <p class="text-xs text-red-300 mb-2">Auto-Backup</p>
+                            <p class="text-sm text-green-400">✅ Every 6 hours</p>
+                            <p class="text-xs text-gray-400">Scheduled</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <form action="{{ route('admin.backup.create') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors">
+                                💾 Create Backup Now
+                            </button>
+                        </form>
+                        @if($backupStatus['backup_count'] > 0)
+                            <a href="{{ route('admin.backup.list') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">
+                                📋 View Backups
+                            </a>
+                        @endif
+                    </div>
+
+                    @if(!$backupStatus['backup_available'])
+                        <div class="mt-3 p-2 bg-yellow-900/30 rounded text-xs text-yellow-300">
+                            <p>⚠️ No backup history found. Create your first backup to protect your data.</p>
+                        </div>
+                    @endif
                 </div>
-                <div>
-                    <h3 class="font-semibold text-red-300 mb-2">Account Details</h3>
-                    <p><strong>Role:</strong> <span class="text-red-400"> Super Admin</span></p>
-                    <p><strong>Account Type:</strong> Super Administrator</p>
-                    <p><strong>Member Since:</strong> {{ Auth::user()->created_at->format('M d, Y') }}</p>
-                    <p><a href="{{ route('dashboard.profile') }}" class="text-red-400 hover:underline"><i class="fas fa-key mr-1"></i>Change Password</a></p>
-                    <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Name and email are display-only. Edit through Employee Management.</p>
+            </div>
+
+            <!-- User Information -->
+            <div class="bg-black/60 p-6 rounded-lg border border-red-900/30">
+                <h2 class="text-xl font-semibold mb-4 text-red-400">👤 Your Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <h3 class="font-semibold text-red-300 mb-2">Personal Details</h3>
+                        <p><strong>Name:</strong> Kenjie </p>
+                        <p><strong>Email:</strong> {{ Auth::user()->email }}</p>
+                        <p><strong>Position:</strong> {{ Auth::user()->position ?? 'Developer' }}</p>
+                        <p><strong>Salary:</strong> ₱{{ number_format(Auth::user()->salary ?? 0, 2) }}</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-red-300 mb-2">Account Details</h3>
+                        <p><strong>Role:</strong> <span class="text-red-400"> Super Admin</span></p>
+                        <p><strong>Account Type:</strong> Super Administrator</p>
+                        <p><strong>Member Since:</strong> {{ Auth::user()->created_at->format('M d, Y') }}</p>
+                        <p><a href="{{ route('dashboard.profile') }}" class="text-red-400 hover:underline"><i class="fas fa-key mr-1"></i>Change Password</a></p>
+                        <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Name and email are display-only. Edit through Employee Management.</p>
+                    </div>
                 </div>
             </div>
         </div>

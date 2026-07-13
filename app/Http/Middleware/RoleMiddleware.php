@@ -105,9 +105,10 @@ class RoleMiddleware
             return $next($request);
         }
 
-        // Handle multiple roles (e.g., role:employee|manager)
-        if (strpos($role, '|') !== false) {
-            $allowedRoles = explode('|', $role);
+        // Handle multiple roles (support both '|' and ',' separators, e.g., role:employee|manager or role:super_admin,admin)
+        if (strpos($role, '|') !== false || strpos($role, ',') !== false) {
+            $allowedRoles = preg_split('/[\|,]/', $role);
+            $allowedRoles = array_map('trim', $allowedRoles);
             $hasAccess = false;
             
             foreach ($allowedRoles as $allowedRole) {

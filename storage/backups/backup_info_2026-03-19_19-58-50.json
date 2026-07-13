@@ -1,8 +1,0 @@
-{
-    "timestamp": "2026-03-19_19-58-50",
-    "date": "2026-03-19 19:58:50",
-    "database_backup": "C:\\xampp\\htdocs\\Business_System\\storage\\backups\/database_2026-03-19_19-58-50.sqlite",
-    "uploads_backup": null,
-    "laravel_version": "12.51.0",
-    "php_version": "8.2.12"
-}

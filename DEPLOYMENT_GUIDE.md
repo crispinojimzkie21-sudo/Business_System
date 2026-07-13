@@ -1,20 +1,20 @@
-# RM Manliquid Business System - Production Deployment Guide
+RM Manliquid Business System - Production Deployment Guide
 
-## 🚀 Quick Deployment Steps
+🚀 Quick Deployment Steps
 
-### 1. Pre-Deployment Checklist
+# 1. Pre-Deployment Checklist
 - [ ] Run `npm run build` to compile assets ✓
 - [ ] Upload all files to your server
 - [ ] Set proper file permissions
 - [ ] Configure database
 
-### 2. Server Requirements
+# 2. Server Requirements
 - PHP 8.1+
 - MySQL 5.7+ or SQLite
 - Node.js (for asset building)
 - Web server (Apache/Nginx)
 
-### 3. Environment Configuration
+# 3. Environment Configuration
 
 Create `.env` file on server using `production_env_template.txt`:
 
@@ -24,7 +24,7 @@ cp production_env_template.txt .env
 # Edit .env with your actual values
 ```
 
-**Critical Settings:**
+Critical Settings
 - `APP_ENV=production`
 - `APP_DEBUG=false`
 - `APP_URL=https://your-domain.com`

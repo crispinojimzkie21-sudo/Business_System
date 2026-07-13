@@ -162,7 +162,7 @@ Route::get('/test-urls', function () {
 
 Route::get('/superadmin', [SuperAdminController::class, 'index'])
 
-    ->middleware(['web', 'auth', 'role:super_admin'])
+    ->middleware(['web', 'auth', 'role:super_admin,admin'])
 
     ->name('superadmin.shortcut');
 
@@ -230,7 +230,7 @@ Route::get('/dashboard/admin', [AdminController::class, 'index'])
 
 Route::get('/dashboard/super-admin', [SuperAdminController::class, 'index'])
 
-    ->middleware(['web', 'auth', 'role:super_admin'])
+    ->middleware(['web', 'auth', 'role:super_admin,admin'])
 
     ->name('dashboard.superadmin');
 
@@ -391,31 +391,22 @@ Route::post('/attendance/{userId}/admin-checkout', [AttendanceController::class,
 // Super Admin: Complete System Management
 
 Route::get('/superadmin/access-control', [SuperAdminController::class, 'accessControl'])
-
-    ->middleware(['web', 'auth', 'role:super_admin'])
-
+    ->middleware(['web', 'auth', 'role:super_admin,admin'])
     ->name('superadmin.access-control');
-
-
-
-// Super Admin attendance refresh route
-
-Route::get('/superadmin/refresh-attendances', [SuperAdminController::class, 'refreshAttendances'])
-
-    ->middleware(['web', 'auth', 'role:super_admin'])
-
-    ->name('superadmin.refresh-attendances');
-
-
-// Super Admin Monthly Attendance Records page
 Route::get('/superadmin/monthly-attendance', [SuperAdminController::class, 'monthlyAttendance'])
     ->middleware(['web', 'auth', 'role:super_admin,admin'])
     ->name('superadmin.monthly-attendance');
-
+Route::get('/superadmin/refresh-attendances', [SuperAdminController::class, 'refreshAttendances'])
+    ->middleware(['web', 'auth', 'role:super_admin,admin'])
+    ->name('superadmin.refresh-attendances');
+Route::get('/superadmin/real-time-stats', [SuperAdminController::class, 'realTimeStats'])
+    ->middleware(['web', 'auth', 'role:super_admin,admin'])
+    ->name('superadmin.real-time-stats');
 
 // Backup Management Routes (Super Admin only)
 
 Route::prefix('admin/backup')->middleware(['web', 'auth', 'role:super_admin'])->group(function () {
+    // ... rest of the code remains the same ...
 
     Route::post('/create', [BackupController::class, 'create'])->name('admin.backup.create');
 
@@ -431,13 +422,13 @@ Route::prefix('admin/backup')->middleware(['web', 'auth', 'role:super_admin'])->
 
 Route::patch('/superadmin/access/{id}/toggle', [AdminManagementController::class, 'toggleAccess'])
 
-    ->middleware(['web', 'auth', 'role:super_admin'])
+    ->middleware(['web', 'auth', 'role:super_admin,admin'])
 
     ->name('superadmin.toggle-access');
 
 
 
-Route::middleware(['web', 'auth', 'role:super_admin'])->group(function () {
+Route::middleware(['web', 'auth', 'role:super_admin,admin'])->group(function () {
 
     // User Management
 
@@ -648,24 +639,25 @@ Route::middleware(['web', 'auth', 'role:admin'])->group(function () {
 
     Route::get('/eload/{eload}/edit', [EloadController::class, 'edit'])->name('eload.edit');
 
-    Route::put('/eload/{eload}', [EloadController::class, 'update'])->name('eload.update');
-
-    
-
     // E-Load Transactions - Admin Access
 
-    Route::get('/eload/add-load', [EloadController::class, 'addLoad'])->name('admin.eload.add-load');
+    Route::get('/admin/eload/add-load', [EloadController::class, 'adminAddLoad'])->name('admin.eload.add-load');
+    Route::get('/admin/eload/add-load-multiple', [EloadController::class, 'adminAddLoadMultiple'])->name('admin.eload.add-load-multiple');
 
-    Route::get('/eload/add-load-multiple', [EloadController::class, 'addLoadMultiple'])->name('admin.eload.add-load-multiple');
+    Route::get('/eload/add-load', [EloadController::class, 'addLoad'])->name('admin.eload.add-load.legacy');
+    Route::get('/eload/add-load-multiple', [EloadController::class, 'addLoadMultiple'])->name('admin.eload.add-load-multiple.legacy');
 
-    Route::post('/eload/process-load', [EloadController::class, 'processLoad'])->name('admin.eload.process-load');
-    Route::post('/eload/process-multiple-loads', [EloadController::class, 'processMultipleLoads'])->name('admin.eload.process-multiple-loads');
+    Route::post('/admin/eload/process-load', [EloadController::class, 'adminProcessLoad'])->name('admin.eload.process-load');
+    Route::post('/admin/eload/process-multiple-loads', [EloadController::class, 'adminProcessMultipleLoads'])->name('admin.eload.process-multiple-loads');
+    
+    Route::post('/eload/process-load', [EloadController::class, 'processLoad'])->name('admin.eload.process-load.legacy');
+    Route::post('/eload/process-multiple-loads', [EloadController::class, 'processMultipleLoads'])->name('admin.eload.process-multiple-loads.legacy');
+    
     Route::get('/eload/transactions/history', [EloadController::class, 'transactionsHistory'])->name('admin.eload.transactions.history');
 
     Route::put('/eload/transactions/{transaction}/status', [EloadController::class, 'updateTransactionStatus'])->name('admin.eload.transactions.update-status');
 
 });
-
 // Admin TV E-Load Dashboard (Test route outside group)
 Route::get('/admin/tv-eload', [TelevisionEloadController::class, 'adminDashboard'])
     ->middleware(['web', 'auth', 'role:admin'])

@@ -127,22 +127,52 @@ class AdminManagementController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', 'min:8'],
             'position' => ['nullable', 'string', 'max:255'],
             'salary' => ['nullable', 'numeric', 'min:0'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'department' => ['nullable', 'string', 'max:255'],
+            'employment_status' => ['nullable', 'in:active,inactive,on_leave,terminated'],
+            'notes' => ['nullable', 'string'],
         ]);
+
+        // Auto-generate password if not provided
+        $autoPassword = null;
+        if (!$request->has('password') || empty($request->password)) {
+            $autoPassword = $this->generateAutoPassword();
+            $hashedPassword = Hash::make($autoPassword);
+        } else {
+            $hashedPassword = Hash::make($request->password);
+        }
+
+        // Generate unique employee ID
+        $employeeId = $this->generateEmployeeId('admin');
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => $hashedPassword,
             'position' => $data['position'] ?? 'Admin Assistant',
             'salary' => $data['salary'] ?? 30000,
             'role' => 'admin',
+            'phone' => $data['phone'] ?? null,
+            'address' => $data['address'] ?? null,
+            'hire_date' => Carbon::today()->toDateString(),
+            'department' => $data['department'] ?? null,
+            'employee_id' => $employeeId,
+            'employment_status' => $data['employment_status'] ?? 'active',
+            'notes' => $data['notes'] ?? null,
             'access_enabled' => true, // Enable access by default
         ]);
 
-        return redirect()->route('admin.list')->with('success', 'Admin account created successfully!');
+        // Prepare success message with credentials if auto-generated
+        $successMessage = 'Admin account created successfully!';
+        if ($autoPassword) {
+            $successMessage .= " Auto-generated password: {$autoPassword}";
+        }
+        $successMessage .= " Employee ID: {$employeeId}";
+
+        return redirect()->route('admin.list')->with('success', $successMessage);
     }
 
     public function showEmployeeRegister()
@@ -155,10 +185,9 @@ class AdminManagementController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', 'min:8'],
             'position' => ['nullable', 'string', 'max:255'],
             'salary' => ['nullable', 'numeric', 'min:0'],
-            'role' => ['required', 'in:employee,admin,cashier'],
+            'role' => ['required', 'in:employee,admin,cashier,sales_clerk,manager'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
             'hire_date' => ['nullable', 'date'],
@@ -168,10 +197,22 @@ class AdminManagementController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        // Auto-generate password if not provided
+        $autoPassword = null;
+        if (!$request->has('password') || empty($request->password)) {
+            $autoPassword = $this->generateAutoPassword();
+            $hashedPassword = Hash::make($autoPassword);
+        } else {
+            $hashedPassword = Hash::make($request->password);
+        }
+
+        // Generate unique employee ID if not provided
+        $employeeId = $data['employee_id'] ?? $this->generateEmployeeId($data['role']);
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => $hashedPassword,
             'position' => $data['position'] ?? null,
             'salary' => $data['salary'] ?? null,
             'role' => $data['role'],
@@ -179,25 +220,61 @@ class AdminManagementController extends Controller
             'address' => $data['address'] ?? null,
             'hire_date' => $data['hire_date'] ?? Carbon::today()->toDateString(),
             'department' => $data['department'] ?? null,
-            'employee_id' => $data['employee_id'] ?? 'EMP' . str_pad(User::max('id') + 1, 5, '0', STR_PAD_LEFT),
+            'employee_id' => $employeeId,
             'employment_status' => $data['employment_status'] ?? 'active',
             'notes' => $data['notes'] ?? null,
             'access_enabled' => true, // Enable access by default for all roles
         ]);
 
-        // Automatically add to attendance email list (except super admin)
-        if ($user->role !== 'super_admin') {
-            AttendanceEmailList::create([
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'name' => $user->name,
-                'role' => $user->role,
-                'position' => $user->position,
-                'is_active' => true,
-            ]);
+        // Prepare success message with credentials if auto-generated
+        $successMessage = 'Employee account created successfully!';
+        if ($autoPassword) {
+            $successMessage .= " Auto-generated password: {$autoPassword}";
         }
+        $successMessage .= " Employee ID: {$employeeId}";
 
-        return redirect()->route('employee.list')->with('success', 'Employee account created successfully and added to attendance list!');
+        return redirect()->route('employee.list')->with('success', $successMessage);
+    }
+
+    /**
+     * Generate automatic password for new employees
+     */
+    private function generateAutoPassword()
+    {
+        // Generate a secure 8-character password
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+        $password = '';
+        
+        // Ensure at least one uppercase, one lowercase, one number, and one special character
+        $password .= strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 1));
+        $password .= strtolower(substr(str_shuffle('abcdefghijklmnopqrstuvwxyz'), 0, 1));
+        $password .= substr(str_shuffle('0123456789'), 0, 1);
+        $password .= substr(str_shuffle('!@#$%'), 0, 1);
+        
+        // Add 4 more random characters
+        for ($i = 0; $i < 4; $i++) {
+            $password .= $characters[rand(0, strlen($characters) - 1)];
+        }
+        
+        return str_shuffle($password);
+    }
+
+    /**
+     * Generate unique employee ID based on role
+     */
+    private function generateEmployeeId($role)
+    {
+        $prefix = match($role) {
+            'employee' => 'EMP',
+            'admin' => 'ADM',
+            'cashier' => 'CASH',
+            'sales_clerk' => 'SALES',
+            'manager' => 'MGR',
+            default => 'EMP'
+        };
+        
+        $nextId = str_pad(User::max('id') + 1, 5, '0', STR_PAD_LEFT);
+        return $prefix . $nextId;
     }
 
     public function listAdmins()

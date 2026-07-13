@@ -22,7 +22,7 @@ class SampleAccountsSeeder extends Seeder
             [
                 'name' => 'Admin Assistant',
                 'password' => Hash::make('Admin123!'),
-                'role' => 'admin',
+                'role' => 'super_admin',
                 'position' => 'Administrative Assistant',
                 'salary' => 25000.00,
             ]

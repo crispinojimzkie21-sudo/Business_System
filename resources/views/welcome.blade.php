@@ -109,6 +109,7 @@
                         @endif
                         <input name="company" placeholder="Company name" class="w-full px-4 py-3 border border-gray-700 bg-black/40 rounded-md text-white placeholder-gray-400" required />
                         <input name="email" placeholder="Work email" class="w-full px-4 py-3 border border-gray-700 bg-black/40 rounded-md text-white placeholder-gray-400" required />
+                        <textarea name="message" placeholder="Tell us about your business needs" class="w-full px-4 py-3 border border-gray-700 bg-black/40 rounded-md text-white placeholder-gray-400" rows="3"></textarea>
                         <button type="submit" class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md transition-colors">Submit</button>
                     </form>
                 </div>

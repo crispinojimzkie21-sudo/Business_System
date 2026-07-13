@@ -1,20 +1,20 @@
 # 📧 Email Receipt Setup Guide
 
-## 🎯 Overview
+# 🎯 Overview
 This guide will help you configure Gmail SMTP to send email receipts automatically when sales are made.
 
-## 📋 Prerequisites
+# 📋 Prerequisites
 - Gmail account with 2-Factor Authentication enabled
 - App Password generated from Google Account settings
 
-## 🔧 Step-by-Step Setup
+# 🔧 Step-by-Step Setup
 
-### Step 1: Enable 2-Factor Authentication
+# Step 1: Enable 2-Factor Authentication
 1. Go to [Google Account Security](https://myaccount.google.com/security)
 2. Enable "2-Step Verification"
 3. Follow the setup process
 
-### Step 2: Generate App Password
+# Step 2: Generate App Password
 1. Go to [App Passwords](https://myaccount.google.com/apppasswords)
 2. Select "Mail" for the app
 3. Select "Other (Custom name)" 
@@ -22,7 +22,7 @@ This guide will help you configure Gmail SMTP to send email receipts automatical
 5. Click "Generate"
 6. **Copy the 16-character password** (without spaces)
 
-### Step 3: Configure Gmail SMTP
+# Step 3: Configure Gmail SMTP
 Run the configuration script:
 ```bash
 php configure_gmail.php
@@ -32,32 +32,32 @@ Enter:
 - Your Gmail address
 - The 16-character App Password
 
-### Step 4: Test Email Configuration
+# Step 4: Test Email Configuration
 ```bash
 php test_gmail_smtp.php
 ```
 
 Enter any email address to send a test email.
 
-### Step 5: Clear Caches
+# Step 5: Clear Caches
 ```bash
 php artisan config:clear
 php artisan cache:clear
 ```
 
-## 📧 How Email Receipts Work
+# 📧 How Email Receipts Work
 
-### Automatic Sending
+# Automatic Sending
 - When a sale is completed with a customer email
 - System automatically sends a receipt to the customer
 - Receipt includes transaction details and items purchased
 
-### Manual Resending
+# Manual Resending
 - Go to Sales History
 - Click "Resend Receipt" for any sale
 - Email will be sent to the customer's email address
 
-### Email Template Features
+# Email Template Features
 - Professional HTML design
 - Company branding
 - Transaction details

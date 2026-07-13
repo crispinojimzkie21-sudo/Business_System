@@ -18,8 +18,7 @@ class ContactController extends Controller
         $submission = ContactSubmission::create([
             'company' => $validated['company'],
             'email' => $validated['email'],
-            'message' => 'Interested in Business System trial',
-            'status' => 'new',
+            'message' => $request->message ?? 'Interested in Business System trial',
         ]);
 
         // Here you would typically send email notification
