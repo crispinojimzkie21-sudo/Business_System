@@ -1,10 +1,14 @@
 services:
   - type: web
-    name: Business System
+    name: business-system
     runtime: php
-    runtimeVersion: "8.2"
-    buildCommand: composer install --no-dev && php artisan key:generate --force
-    startCommand: php artisan migrate --force && vendor/bin/heroku-php-apache2 public/
+    plan: free
+    buildCommand: |
+      composer install --no-dev
+      php artisan key:generate --force
+    startCommand: |
+      php artisan migrate --force
+      vendor/bin/heroku-php-apache2 public/
     envVars:
       - key: PHP_VERSION
         value: "8.2"
