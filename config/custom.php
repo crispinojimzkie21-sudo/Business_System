@@ -2,9 +2,10 @@
 
 return [
     'business' => [
-        'name' => env('APP_NAME', 'Business'),
-        'email' => env('MAIL_FROM_ADDRESS'),
-        'timezone' => env('APP_TIMEZONE', 'UTC'),
+        'name' => env('APP_NAME', 'Business System'),
+        'email' => env('MAIL_FROM_ADDRESS', 'noreply@business.com'),
+        'phone' => env('BUSINESS_PHONE', ''),
+        'timezone' => env('APP_TIMEZONE', 'Asia/Manila'),
     ],
     
     'stripe' => [
@@ -12,8 +13,8 @@ return [
         'secret' => env('STRIPE_SECRET_KEY'),
     ],
     
-    'twilio' => [
-        'auth_token' => env('TWILIO_AUTH_TOKEN'),
-        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+    'mail' => [
+        'from_address' => env('MAIL_FROM_ADDRESS'),
+        'from_name' => env('MAIL_FROM_NAME', env('APP_NAME')),
     ],
 ];
